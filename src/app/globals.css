@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+:root {
+  --background: #000000;
+  --foreground: #ffffff;
+  --muted: #888888;
+  --subtle: #333333;
+  --card-bg: #0a0a0a;
+  --card-border: #1a1a1a;
+  --accent: #e8e8e8;
+  --trend-up: #c9a84c;
+  --trend-down: #b85450;
+  --data-primary: #d4cfc4;
+  --data-secondary: #6b6560;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-card-bg: var(--card-bg);
+  --color-card-border: var(--card-border);
+  --color-accent: var(--accent);
+  --color-trend-up: var(--trend-up);
+  --color-trend-down: var(--trend-down);
+  --color-data-primary: var(--data-primary);
+  --color-data-secondary: var(--data-secondary);
+  --font-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  background: #111111;
+}
+
+::selection {
+  background: #ffffff;
+  color: #000000;
+}
