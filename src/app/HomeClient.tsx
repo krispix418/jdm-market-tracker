@@ -7,6 +7,11 @@ import type { TopMover } from "./page";
 
 type SortOption = "name" | "price-high" | "price-low" | "most-sold";
 
+interface ModelGroup {
+  model: string;
+  generations: CarWithStats[];
+}
+
 function formatPrice(price: number): string {
   return price > 0 ? `$${price.toLocaleString()}` : "—";
 }
@@ -36,11 +41,9 @@ function CarCard({ car }: { car: CarWithStats }) {
         <div className="flex justify-between items-baseline">
           <div>
             <h3 className="text-sm text-white group-hover:underline">
-              {car.model} <span className="text-muted">{car.generation}</span>
+              {car.generation}
             </h3>
-            <p className="text-xs text-subtle mt-0.5">
-              {yearRange}
-            </p>
+            <p className="text-xs text-subtle mt-0.5">{yearRange}</p>
           </div>
           {car.total_sold > 0 && (
             <div className="text-right">
@@ -56,11 +59,13 @@ function CarCard({ car }: { car: CarWithStats }) {
   );
 }
 
-const MODERN_MODELS = new Set(["RX-8"]);
+// A model's representative price = its priciest generation (the lineage ceiling).
+function modelPrice(gens: CarWithStats[]): number {
+  return Math.max(...gens.map((g) => g.avg_price));
+}
 
-function isClassic(car: CarWithStats): boolean {
-  if (MODERN_MODELS.has(car.model)) return false;
-  return (car.year_start ?? 0) < 2003;
+function modelSold(gens: CarWithStats[]): number {
+  return gens.reduce((sum, g) => sum + g.total_sold, 0);
 }
 
 export default function HomeClient({ cars, topMovers }: { cars: CarWithStats[]; topMovers: TopMover[] }) {
@@ -74,7 +79,7 @@ export default function HomeClient({ cars, topMovers }: { cars: CarWithStats[]; 
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    let result = cars.filter(
+    return cars.filter(
       (c) =>
         c.total_sold > 0 &&
         (!activeMake || c.make === activeMake) &&
@@ -82,27 +87,46 @@ export default function HomeClient({ cars, topMovers }: { cars: CarWithStats[]; 
           c.model.toLowerCase().includes(q) ||
           c.generation.toLowerCase().includes(q))
     );
-
-    result.sort((a, b) => {
-      switch (sort) {
-        case "price-high":
-          return b.avg_price - a.avg_price;
-        case "price-low":
-          return (a.avg_price || Infinity) - (b.avg_price || Infinity);
-        case "most-sold":
-          return b.total_sold - a.total_sold;
-        default:
-          return `${a.make} ${a.model}`.localeCompare(`${b.make} ${b.model}`);
-      }
-    });
-
-    return result;
-  }, [cars, search, sort, activeMake]);
+  }, [cars, search, activeMake]);
 
   const makes = useMemo(() => {
-    const makeSet = [...new Set(filtered.map((c) => c.make))];
-    return makeSet.sort();
+    return [...new Set(filtered.map((c) => c.make))].sort();
   }, [filtered]);
+
+  // Group a make's cars by model (generations chronological within each model),
+  // then order the model groups themselves by the active sort.
+  const groupModels = useMemo(() => {
+    return (makeCars: CarWithStats[]): ModelGroup[] => {
+      const byModel = new Map<string, CarWithStats[]>();
+      for (const c of makeCars) {
+        const arr = byModel.get(c.model);
+        if (arr) arr.push(c);
+        else byModel.set(c.model, [c]);
+      }
+
+      const groups: ModelGroup[] = [...byModel.entries()].map(([model, gens]) => ({
+        model,
+        generations: [...gens].sort(
+          (a, b) => (a.year_start ?? 0) - (b.year_start ?? 0)
+        ),
+      }));
+
+      groups.sort((a, b) => {
+        switch (sort) {
+          case "price-high":
+            return modelPrice(b.generations) - modelPrice(a.generations);
+          case "price-low":
+            return modelPrice(a.generations) - modelPrice(b.generations);
+          case "most-sold":
+            return modelSold(b.generations) - modelSold(a.generations);
+          default:
+            return a.model.localeCompare(b.model);
+        }
+      });
+
+      return groups;
+    };
+  }, [sort]);
 
   const totalAuctions = cars.reduce((a, c) => a + c.total_sold, 0);
 
@@ -211,12 +235,11 @@ export default function HomeClient({ cars, topMovers }: { cars: CarWithStats[]; 
         </div>
       )}
 
-      {/* Cars */}
+      {/* Cars — grouped by make, then by model lineage */}
       <main className="max-w-7xl mx-auto px-6 py-12">
         {makes.map((make) => {
           const makeCars = filtered.filter((c) => c.make === make);
-          const classics = makeCars.filter(isClassic);
-          const modern = makeCars.filter((c) => !isClassic(c));
+          const groups = groupModels(makeCars);
 
           return (
             <section key={make} className="mb-16">
@@ -225,35 +248,29 @@ export default function HomeClient({ cars, topMovers }: { cars: CarWithStats[]; 
                   {make}
                 </h2>
                 <span className="text-sm text-muted">
-                  {makeCars.length} model{makeCars.length !== 1 ? "s" : ""}
+                  {makeCars.length} car{makeCars.length !== 1 ? "s" : ""}
                 </span>
               </div>
 
-              {classics.length > 0 && (
-                <div className="mb-10">
-                  <p className="text-xs uppercase tracking-[0.2em] text-muted mb-6">
-                    Classic
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
-                    {classics.map((car) => (
-                      <CarCard key={car.id} car={car} />
-                    ))}
+              <div className="space-y-10">
+                {groups.map((group) => (
+                  <div key={group.model}>
+                    <p className="text-xs uppercase tracking-[0.2em] text-muted mb-6">
+                      {group.model}
+                      {group.generations.length > 1 && (
+                        <span className="ml-2 normal-case tracking-normal text-subtle">
+                          {group.generations.length} generations
+                        </span>
+                      )}
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
+                      {group.generations.map((car) => (
+                        <CarCard key={car.id} car={car} />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-
-              {modern.length > 0 && (
-                <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-muted mb-6">
-                    Modern
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
-                    {modern.map((car) => (
-                      <CarCard key={car.id} car={car} />
-                    ))}
-                  </div>
-                </div>
-              )}
+                ))}
+              </div>
             </section>
           );
         })}
