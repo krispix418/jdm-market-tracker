@@ -184,3 +184,32 @@ the weekly scraper uses it. No key needed for WS1–WS3.
 ## Prerequisites
 - WS4 needs a personal `ANTHROPIC_API_KEY` (scraper + GitHub Actions secret).
 - WS1 schema migration + backfill will trigger a full re-scrape.
+
+---
+
+## Next session (planned 2026-06-14)
+
+Theme: **make this a delight for car geeks hunting fun facts.**
+
+1. **Recolor — explore a blue + orange palette.** Currently a dark theme with gold
+   (`#c9a84c`), red (`#b85450`), cream (`#d4cfc4`), green (`#6e9b7c`). A retheme touches:
+   - `src/app/globals.css` — the `--trend-up` / `--trend-down` / `--data-primary` / `--background`
+     etc. CSS vars (Tailwind v4 `@theme`).
+   - Hardcoded hexes in chart components: `PriceChart`, `MileageChart`, `ConditionBreakdown`,
+     `dashboard/MoversChart`, `dashboard/MarketScatter`. Centralize these into CSS vars during
+     the retheme so future palette changes are one place.
+   - Decide semantic mapping: e.g. orange = appreciating/premium, blue = depreciating/deal.
+
+2. **WS4 — Insights / Fun Facts engine** (the headline next feature). Hybrid: code computes
+   true facts, Claude Haiku phrases them with car-geek flair; generated weekly in the scraper,
+   stored in an `insights` table, surfaced on the dashboard (and per-car blurbs).
+   - Lean into shareable, surprising facts: biggest movers, "N Miatas = one R34" ratios,
+     22B/Type-RA premiums, modified discounts, cheapest path into an icon, most-liquid vs
+     unicorn, depreciation leaders/laggards.
+   - **Prereq:** personal `ANTHROPIC_API_KEY` + ~$5 credit → GitHub Actions secret.
+
+3. **Hedonic regression** (stretch) — `price ~ year + mileage + trim + mods` for marginal
+   attribute values, on well-populated generations.
+
+State at end of this session: WS1/WS2/WS3/WS5 shipped + deployed; 55 cars / 14,245 auctions;
+km-mileage parsing fixed; dashboard link restyled. Only WS4 + stretches remain.
