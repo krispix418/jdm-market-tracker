@@ -53,14 +53,29 @@ def parse_year_from_title(title: str) -> int | None:
     return int(match.group(1)) if match else None
 
 
+KM_TO_MILES = 0.621371
+
+
 def parse_mileage_from_title(title: str) -> int | None:
+    # Miles (e.g. "41k-Mile", "12,345-Mile")
     match = re.search(r"([\d,.]+)[kK]-[Mm]ile", title)
     if match:
-        num = float(match.group(1).replace(",", ""))
-        return int(num * 1000)
+        return int(float(match.group(1).replace(",", "")) * 1000)
     match = re.search(r"([\d,]+)-[Mm]ile", title)
     if match:
         return int(match.group(1).replace(",", ""))
+
+    # Kilometers (JDM imports, e.g. "41k-Kilometer") — convert to miles so all
+    # mileage is stored in one unit.
+    match = re.search(r"([\d,.]+)[kK]-[Kk]ilometer", title)
+    if match:
+        km = float(match.group(1).replace(",", "")) * 1000
+        return int(km * KM_TO_MILES)
+    match = re.search(r"([\d,]+)-[Kk]ilometer", title)
+    if match:
+        km = int(match.group(1).replace(",", ""))
+        return int(km * KM_TO_MILES)
+
     return None
 
 
