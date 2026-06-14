@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import MoversChart, { type MoverDatum } from "./MoversChart";
+import MarketScatter, { type ScatterDatum } from "./MarketScatter";
 
 interface CarTrend {
   id: string;
@@ -16,30 +18,19 @@ function formatPrice(price: number): string {
   return `$${price.toLocaleString()}`;
 }
 
-function TrendRow({ car, showChange }: { car: CarTrend; showChange?: boolean }) {
+function CompactRow({ car }: { car: CarTrend }) {
   return (
     <Link href={`/car/${car.id}`}>
-      <div className="flex justify-between items-center py-3 border-b border-card-border card-hover px-2 -mx-2">
-        <div>
-          <p className="text-sm text-white">
-            {car.make} {car.model}
+      <div className="flex justify-between items-center py-2.5 border-b border-card-border card-hover px-2 -mx-2">
+        <div className="min-w-0">
+          <p className="text-sm text-white truncate">
+            {car.make} {car.model} <span className="text-muted">{car.generation}</span>
           </p>
-          <p className="text-xs text-subtle mt-0.5">
-            {car.generation} · {car.totalSold} sold
-          </p>
+          <p className="text-xs text-subtle mt-0.5">{car.totalSold} sold</p>
         </div>
-        <div className="text-right">
-          {showChange ? (
-            <p className={`text-sm font-medium ${car.yoyChange > 0 ? "text-trend-up" : "text-trend-down"}`}>
-              {car.yoyChange > 0 ? "+" : ""}
-              {car.yoyChange}%
-            </p>
-          ) : (
-            <p className="text-sm font-medium text-data-primary">
-              {formatPrice(car.medianPrice)}
-            </p>
-          )}
-        </div>
+        <p className="text-sm font-medium text-data-primary whitespace-nowrap">
+          {formatPrice(car.medianPrice)}
+        </p>
       </div>
     </Link>
   );
@@ -56,22 +47,28 @@ export default function DashboardClient({
   totalCars: number;
   overallMedian: number;
 }) {
-  const appreciating = [...trends]
-    .filter((t) => t.yoyChange > 2)
-    .sort((a, b) => b.yoyChange - a.yoyChange);
+  const label = (t: CarTrend) => `${t.model} ${t.generation}`;
 
-  const depreciating = [...trends]
-    .filter((t) => t.yoyChange < -2)
-    .sort((a, b) => a.yoyChange - b.yoyChange);
+  // Biggest movers — balanced set of top appreciating + depreciating, sorted desc.
+  const moving = trends.filter((t) => Math.abs(t.yoyChange) >= 2);
+  const up = moving.filter((t) => t.yoyChange > 0).sort((a, b) => b.yoyChange - a.yoyChange).slice(0, 8);
+  const down = moving.filter((t) => t.yoyChange < 0).sort((a, b) => a.yoyChange - b.yoyChange).slice(0, 8);
+  const moverData: MoverDatum[] = [...up, ...down]
+    .sort((a, b) => b.yoyChange - a.yoyChange)
+    .map((t) => ({ id: t.id, label: label(t), yoyChange: t.yoyChange, medianPrice: t.medianPrice }));
 
-  const bestValue = [...trends]
-    .filter((t) => t.medianPrice > 0)
-    .sort((a, b) => a.medianPrice - b.medianPrice)
-    .slice(0, 8);
+  const scatterData: ScatterDatum[] = trends
+    .filter((t) => t.totalSold > 0 && t.medianPrice > 0)
+    .map((t) => ({ id: t.id, label: `${t.make} ${label(t)}`, totalSold: t.totalSold, medianPrice: t.medianPrice, yoyChange: t.yoyChange }));
 
-  const mostExpensive = [...trends]
-    .sort((a, b) => b.medianPrice - a.medianPrice)
-    .slice(0, 8);
+  const bestValue = [...trends].filter((t) => t.medianPrice > 0).sort((a, b) => a.medianPrice - b.medianPrice).slice(0, 6);
+  const mostExpensive = [...trends].sort((a, b) => b.medianPrice - a.medianPrice).slice(0, 6);
+
+  const kpis = [
+    { label: "Models tracked", value: totalCars.toLocaleString() },
+    { label: "Auctions", value: totalAuctions.toLocaleString() },
+    { label: "Overall median", value: formatPrice(overallMedian) },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -85,78 +82,52 @@ export default function DashboardClient({
             <br />
             Dashboard
           </h1>
-          <p className="text-muted mt-3">
-            {totalCars} models · {totalAuctions.toLocaleString()} auctions ·{" "}
-            {formatPrice(overallMedian)} median
-          </p>
         </div>
       </header>
 
       <main className="max-w-5xl mx-auto px-6 py-10 space-y-14">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-14">
-          {/* Appreciating */}
-          <section>
-            <h2 className="text-xs uppercase tracking-[0.2em] text-muted mb-1">
-              Appreciating
-            </h2>
-            <p className="text-xs text-subtle mb-6">
-              Year-over-year median increase
-            </p>
-            {appreciating.length > 0 ? (
-              appreciating.map((car) => (
-                <TrendRow key={car.id} car={car} showChange />
-              ))
-            ) : (
-              <p className="text-subtle text-sm italic">
-                Not enough data for YoY comparison
-              </p>
-            )}
-          </section>
-
-          {/* Depreciating */}
-          <section>
-            <h2 className="text-xs uppercase tracking-[0.2em] text-muted mb-1">
-              Depreciating
-            </h2>
-            <p className="text-xs text-subtle mb-6">
-              Year-over-year median decrease
-            </p>
-            {depreciating.length > 0 ? (
-              depreciating.map((car) => (
-                <TrendRow key={car.id} car={car} showChange />
-              ))
-            ) : (
-              <p className="text-subtle text-sm italic">
-                Not enough data for YoY comparison
-              </p>
-            )}
-          </section>
+        {/* KPI tiles */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-card-border">
+          {kpis.map((k) => (
+            <div key={k.label} className="bg-background p-6">
+              <p className="text-xs uppercase tracking-[0.15em] text-muted">{k.label}</p>
+              <p className="text-3xl font-bold text-white mt-2 tracking-tight">{k.value}</p>
+            </div>
+          ))}
         </div>
 
+        {/* Biggest movers */}
+        <section>
+          <h2 className="text-xs uppercase tracking-[0.2em] text-muted mb-1">
+            Biggest Movers — Year over Year
+          </h2>
+          <p className="text-xs text-subtle mb-6">Median price change · click a bar for detail</p>
+          <MoversChart data={moverData} />
+        </section>
+
+        {/* Market map */}
+        <section>
+          <h2 className="text-xs uppercase tracking-[0.2em] text-muted mb-1">Market Map</h2>
+          <p className="text-xs text-subtle mb-6">
+            Median price vs how often it trades — top-left is expensive &amp; rare, bottom-right is affordable &amp; liquid
+          </p>
+          <MarketScatter data={scatterData} />
+        </section>
+
+        {/* Supporting lists */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-14">
-          {/* Best Value */}
           <section>
-            <h2 className="text-xs uppercase tracking-[0.2em] text-muted mb-1">
-              Best Value
-            </h2>
-            <p className="text-xs text-subtle mb-6">
-              Lowest median price
-            </p>
+            <h2 className="text-xs uppercase tracking-[0.2em] text-muted mb-1">Best Value</h2>
+            <p className="text-xs text-subtle mb-4">Lowest median price</p>
             {bestValue.map((car) => (
-              <TrendRow key={car.id} car={car} />
+              <CompactRow key={car.id} car={car} />
             ))}
           </section>
-
-          {/* Most Expensive */}
           <section>
-            <h2 className="text-xs uppercase tracking-[0.2em] text-muted mb-1">
-              Most Expensive
-            </h2>
-            <p className="text-xs text-subtle mb-6">
-              Highest median price
-            </p>
+            <h2 className="text-xs uppercase tracking-[0.2em] text-muted mb-1">Most Expensive</h2>
+            <p className="text-xs text-subtle mb-4">Highest median price</p>
             {mostExpensive.map((car) => (
-              <TrendRow key={car.id} car={car} />
+              <CompactRow key={car.id} car={car} />
             ))}
           </section>
         </div>
