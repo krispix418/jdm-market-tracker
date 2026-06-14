@@ -89,8 +89,15 @@ export default function HomeClient({ cars, topMovers }: { cars: CarWithStats[]; 
     );
   }, [cars, search, activeMake]);
 
+  // Order makes by total auctions sold — most-traded make at the top.
   const makes = useMemo(() => {
-    return [...new Set(filtered.map((c) => c.make))].sort();
+    const soldByMake = new Map<string, number>();
+    for (const c of filtered) {
+      soldByMake.set(c.make, (soldByMake.get(c.make) ?? 0) + c.total_sold);
+    }
+    return [...soldByMake.keys()].sort(
+      (a, b) => (soldByMake.get(b) ?? 0) - (soldByMake.get(a) ?? 0)
+    );
   }, [filtered]);
 
   // Group a make's cars by model (generations chronological within each model),
