@@ -91,7 +91,8 @@ auction_results
 - [x] Build scraper for BringATrailer (Playwright full + simple HTTP modes, dedup by URL)
 - [x] Build frontend: home, dashboard, car detail with price/mileage charts + trim breakdown
 - [x] GitHub Actions workflow for scheduled scraping (weekly simple cron + manual full backfill)
-- [ ] Deploy to Vercel
+- [x] Deploy to Vercel — live at https://jdm-market-tracker.vercel.app
+- [ ] Connect Vercel ↔ GitHub for push-to-deploy (currently deploys via `vercel --prod`)
 - [ ] Add Cars & Bids as second source
 
 ## Scraper Notes
@@ -100,6 +101,13 @@ auction_results
 - **Full mode** (`python scraper.py`): Playwright clicks "Show More" through all pages (up to MAX_PAGES=50). For backfills.
 - Workflow: `.github/workflows/scrape.yml` — weekly Mondays ~6am ET (simple), plus manual `workflow_dispatch` with a `mode` dropdown (`gh workflow run "Scrape BaT auctions" -f mode=full`).
 - Secrets `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` are set in the GitHub repo.
+
+## Deployment (Vercel)
+- Live: https://jdm-market-tracker.vercel.app (project `krispix418/jdm-market-tracker`, team "Chris' projects").
+- `vercel.json` pins `"framework": "nextjs"` (auto-detection whiffed once, so it's explicit).
+- Env vars set in Vercel for Production + Development: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (anon key — safe client-side). Preview not set yet.
+- Deploy manually with `vercel --prod` from the project root. Push-to-deploy not wired yet (connect repo in Vercel dashboard → Settings → Git to enable).
+- ⚠️ Frontend reads with the anon key, so the `cars` + `auction_results` tables must stay readable by the Supabase `anon` role or the live site shows no data.
 
 ## Decisions Made
 - Generation-specific tracking (e.g., NA Miata vs ND Miata are separate entries)
