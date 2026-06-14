@@ -5,7 +5,9 @@ import { computeYoY, compute6Month } from "@/lib/trends";
 import PriceChart from "./PriceChart";
 import MileageChart from "./MileageChart";
 import TrimBreakdown from "./TrimBreakdown";
+import ConditionBreakdown from "./ConditionBreakdown";
 import TrendToggle from "./TrendToggle";
+import { percentile, segmentLabel } from "@/lib/valuation";
 
 function formatPrice(price: number): string {
   return `$${price.toLocaleString()}`;
@@ -34,13 +36,12 @@ export default async function CarDetail({
   const auctions = await getAuctionResults(car.id);
 
   const prices = auctions.map((a) => a.sale_price);
-  const avgPrice =
-    prices.length > 0
-      ? Math.round(prices.reduce((a, b) => a + b, 0) / prices.length)
-      : 0;
   const medianPrice = prices.length > 0 ? median(prices) : 0;
   const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
   const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
+  const p25 = prices.length > 0 ? Math.round(percentile(prices, 25)) : 0;
+  const p75 = prices.length > 0 ? Math.round(percentile(prices, 75)) : 0;
+  const segmentCount = new Set(auctions.map(segmentLabel)).size;
 
   const yoyTrend = computeYoY(auctions);
   const sixMonthTrend = compute6Month(auctions);
@@ -85,12 +86,13 @@ export default async function CarDetail({
 
       <main className="max-w-5xl mx-auto px-6 py-10 space-y-14">
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-px bg-card-border">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-px bg-card-border">
           {[
             { label: "Sold", value: auctions.length.toString() },
-            { label: "Median", value: prices.length > 0 ? formatPrice(medianPrice) : "—" },
-            { label: "Average", value: prices.length > 0 ? formatPrice(avgPrice) : "—" },
             { label: "Low", value: prices.length > 0 ? formatPrice(minPrice) : "—" },
+            { label: "25th", value: prices.length > 0 ? formatPrice(p25) : "—" },
+            { label: "Median", value: prices.length > 0 ? formatPrice(medianPrice) : "—" },
+            { label: "75th", value: prices.length > 0 ? formatPrice(p75) : "—" },
             { label: "High", value: prices.length > 0 ? formatPrice(maxPrice) : "—" },
           ].map((stat) => (
             <div key={stat.label} className="bg-background p-5">
@@ -123,6 +125,16 @@ export default async function CarDetail({
           </h2>
           <TrimBreakdown auctions={auctions} />
         </section>
+
+        {/* Condition & Spec — stock vs modified vs special editions */}
+        {segmentCount > 1 && (
+          <section>
+            <h2 className="text-xs uppercase tracking-[0.2em] text-muted mb-6">
+              Stock vs Modified
+            </h2>
+            <ConditionBreakdown auctions={auctions} />
+          </section>
+        )}
 
         {/* Recent auctions */}
         <section>
