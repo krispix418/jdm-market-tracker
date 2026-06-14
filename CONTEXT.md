@@ -73,7 +73,9 @@ auction_results
   - sale_date (date)
   - year (int) — model year of the car
   - mileage (int, nullable)
-  - url (text) — link to listing
+  - trim (text, nullable) — parsed from title (e.g. V-Spec, Nismo, CR)
+  - url (text) — link to listing; used as dedup key
+  - thumbnail_url (text, nullable)
   - created_at (timestamptz)
 ```
 
@@ -84,13 +86,20 @@ auction_results
 
 ## Status
 - [x] Repo initialized, git identity set
-- [ ] Set up Next.js project
-- [ ] Set up Supabase project & schema
-- [ ] Build scraper for BringATrailer
-- [ ] Build frontend: car list, detail pages, price charts
+- [x] Set up Next.js project (App Router + Tailwind + Recharts)
+- [x] Set up Supabase project & schema (37 cars seeded, ~3.9k auction_results)
+- [x] Build scraper for BringATrailer (Playwright full + simple HTTP modes, dedup by URL)
+- [x] Build frontend: home, dashboard, car detail with price/mileage charts + trim breakdown
+- [x] GitHub Actions workflow for scheduled scraping (weekly simple cron + manual full backfill)
 - [ ] Deploy to Vercel
-- [ ] GitHub Actions workflow for scheduled scraping
 - [ ] Add Cars & Bids as second source
+
+## Scraper Notes
+- `scraper/config.py` maps each car/generation → a BaT autocomplete query. A few (Integra Type S, TLX Type S, GR Corolla) are `None` — no BaT page exists yet.
+- **Simple mode** (`python scraper.py --simple`): plain HTTP, newest ~24 per model. Used by the weekly cron.
+- **Full mode** (`python scraper.py`): Playwright clicks "Show More" through all pages (up to MAX_PAGES=50). For backfills.
+- Workflow: `.github/workflows/scrape.yml` — weekly Mondays ~6am ET (simple), plus manual `workflow_dispatch` with a `mode` dropdown (`gh workflow run "Scrape BaT auctions" -f mode=full`).
+- Secrets `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` are set in the GitHub repo.
 
 ## Decisions Made
 - Generation-specific tracking (e.g., NA Miata vs ND Miata are separate entries)
