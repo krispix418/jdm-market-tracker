@@ -1,0 +1,56 @@
+name: Scrape BaT auctions
+
+on:
+  schedule:
+    # Mondays at 10:00 UTC (~6am ET). Dedup-by-URL makes re-runs safe.
+    - cron: "0 10 * * 1"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Scrape mode (simple = newest ~24/model, full = all pages via Playwright)"
+        type: choice
+        options:
+          - simple
+          - full
+        default: simple
+
+# Never run two scrapes at once (they'd race on inserts).
+concurrency:
+  group: scrape
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      # Scheduled runs have no inputs, so default to simple.
+      MODE: ${{ github.event.inputs.mode || 'simple' }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: scraper/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r scraper/requirements.txt
+
+      - name: Install Playwright browser (full mode only)
+        if: env.MODE == 'full'
+        run: python -m playwright install --with-deps chromium
+
+      - name: Run scraper
+        working-directory: scraper
+        run: |
+          if [ "$MODE" = "full" ]; then
+            echo "🚀 Running full Playwright scrape"
+            python scraper.py
+          else
+            echo "⚡ Running simple scrape (newest ~24/model)"
+            python scraper.py --simple
+          fi
