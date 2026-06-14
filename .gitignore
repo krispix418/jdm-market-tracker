@@ -32,3 +32,6 @@ env/
 # Misc
 *.tsbuildinfo
 next-env.d.ts
+
+# Vercel
+.vercel
