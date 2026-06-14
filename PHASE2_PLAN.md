@@ -69,6 +69,15 @@ same "GC8 average," which is meaningless. Segment and adjust.
    of each attribute ("+$3k per special edition, –$0.8k per 10k miles"). Only on
    well-populated generations.
 
+### WS2 status — v1 shipped (2026-06-14)
+- `src/lib/valuation.ts`: OLS linear regression + percentile + segment-label helpers.
+- `MileageChart`: fair-price depreciation line over the scatter, above/below-curve coloring,
+  `$/10k-mi` depreciation + R² readout. Verified sensible (NSX ≈ $3,169/10k mi, etc.).
+- `ConditionBreakdown`: stock / modified / special-edition segmentation with premium-vs-stock %.
+- Stats row: 25th–median–75th percentile band (replaces noisy average).
+- **Deferred:** hedonic regression (#4, stretch); log/power curve; km-mileage parsing
+  (many JDM imports list km, not miles — currently unparsed → those cars skip the curve).
+
 ---
 
 ## Workstream 3 — Dashboard Visualization Overhaul
