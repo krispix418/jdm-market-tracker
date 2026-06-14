@@ -151,14 +151,16 @@ export default function HomeClient({ cars, topMovers }: { cars: CarWithStats[]; 
             Auction data and price trends for Japanese domestic market
             and modern sport cars.
           </p>
-          <div className="mt-6 flex items-center gap-6 text-xs text-muted">
-            <span>{totalAuctions.toLocaleString()} auctions tracked</span>
-            <span>·</span>
+          <div className="mt-6 flex flex-wrap items-center gap-4">
+            <span className="text-xs text-muted">
+              {totalAuctions.toLocaleString()} auctions tracked
+            </span>
             <Link
               href="/dashboard"
-              className="text-white underline underline-offset-4 hover:no-underline"
+              className="group inline-flex items-center gap-2 border border-trend-up/40 px-4 py-2 text-xs uppercase tracking-[0.15em] text-trend-up hover:bg-trend-up/10 hover:border-trend-up transition-colors"
             >
               Market Dashboard
+              <span className="transition-transform group-hover:translate-x-0.5">→</span>
             </Link>
           </div>
         </div>
