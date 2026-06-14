@@ -91,6 +91,13 @@ Current dashboard = four text lists + three header numbers. Make it *visual*.
 4. **Price distribution** visual across the whole tracked set.
 5. Keep ranked lists but pair each with its chart; add visual hierarchy.
 
+### WS3 status — shipped (2026-06-14)
+- `MoversChart`: diverging YoY bar chart (appreciating gold / depreciating red), click-through to car.
+- `MarketScatter`: price-vs-volume "Market Map", colored by trend direction, click-through.
+- `DashboardClient`: KPI stat tiles + the two charts + compact Best Value / Most Expensive lists.
+- Bonus: homepage make sections now ordered by total auctions sold (Mazda → Honda → Datsun → …).
+- **Deferred:** market-median-over-time line (needs monthly aggregation over all auctions).
+
 ---
 
 ## Workstream 4 — Insights / Fun Facts Engine
