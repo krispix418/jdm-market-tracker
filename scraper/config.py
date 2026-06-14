@@ -36,4 +36,23 @@ BAT_SEARCH_QUERIES = {
     "Acura TLX Type S UA3": None,  # no BaT page yet
     "Nissan Z RZ34": "400z",
     "Toyota GR Corolla GZEA14H": None,  # no BaT page yet
+    # Phase 2 volume expansion — added 2026-06-14 (verified against BaT auction counts)
+    "Datsun 240Z S30": "datsun 240z",
+    "Datsun 280Z S30": "datsun 280z",
+    "Datsun 280ZX S130": "nissan 280zx",
+    "Nissan 300ZX Z31": "nissan 300zx",
+    "Nissan 300ZX Z32": "nissan 300zx",
+    "Nissan 350Z Z33": "nissan 350z",
+    "Nissan 370Z Z34": "nissan 370z",
+    "Acura NSX NA1": "acura nsx na1",
+    "Acura NSX NA2": "acura nsx na1",
+    "Nissan GT-R R35": "nissan gt-r r35",
+    "Toyota MR2 SW20": "toyota mr2",
+    "Toyota Supra A70": "toyota a70 supra",
+    "Lexus SC Z30": "lexus sc300",
+    "Mitsubishi 3000GT Z16A": "mitsubishi 3000gt",
+    "Honda Prelude BB": "honda prelude",
+    "Nissan 240SX S13": "nissan 240sx",
+    "Nissan 240SX S14": "nissan 240sx",
+    "Honda Civic Si EK": "honda civic ek",
 }
