@@ -133,6 +133,12 @@ page-load cost).
 2. Add percentile-band shading to the price chart.
 3. Optionally overlay the mileage-adjusted line.
 
+### WS5 status — shipped (2026-06-14)
+- PriceChart tooltip relabeled `Trend: $X` → `{N}-sale avg: $X`; legend says "{N}-sale moving avg".
+- Added a 25th–75th percentile "typical range" band (ReferenceArea) behind the price line,
+  with a legend showing the dollar range.
+- (Mileage-adjusted line already shipped in WS2's MileageChart.)
+
 ---
 
 ## Claude API — Cost & Billing (for WS4)
