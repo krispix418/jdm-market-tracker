@@ -225,7 +225,11 @@ def scrape_model_page_full(url: str) -> list[dict]:
                     pass
 
         page.on("response", handle_response)
-        page.goto(url, wait_until="networkidle", timeout=30000)
+        # The auction data is embedded in the initial HTML + loaded via XHR on
+        # "Show More" clicks, so we don't need networkidle (which is flaky on
+        # ad/tracker-heavy pages and was timing out the whole run).
+        page.goto(url, wait_until="domcontentloaded", timeout=60000)
+        page.wait_for_timeout(1500)
 
         content = page.content()
 
@@ -342,7 +346,12 @@ def run(use_playwright: bool = True):
             print(f"  📄 Scraping: {model_url}")
             time.sleep(CRAWL_DELAY)
 
-            scraped_cache[query] = scrape_fn(model_url)
+            try:
+                scraped_cache[query] = scrape_fn(model_url)
+            except Exception as e:
+                # One flaky page shouldn't abort the whole run.
+                print(f"  ⚠️ Scrape failed for {key}: {e}")
+                scraped_cache[query] = []
             time.sleep(CRAWL_DELAY)
         else:
             print(f"🔁 Reusing cached results for: {key}")
