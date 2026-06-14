@@ -20,6 +20,15 @@ export interface AuctionResult {
   thumbnail_url: string | null;
   trim: string | null;
   created_at: string;
+  // Phase 2 · WS1 enrichment
+  excerpt: string | null;
+  no_reserve: boolean | null;
+  country_code: string | null;
+  comments_count: number | null;
+  is_modified: boolean | null;
+  special_edition: string | null;
+  condition_flag: string | null;
+  is_import: boolean | null;
 }
 
 export interface CarWithStats extends Car {

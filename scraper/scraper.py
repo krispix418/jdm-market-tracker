@@ -93,6 +93,79 @@ def parse_trim_from_title(title: str) -> str | None:
     return None
 
 
+# BaT lists parts and memorabilia alongside whole cars. Their URL slugs start
+# with the item type (e.g. /listing/wheels-430/) and their titles lack a model year.
+PARTS_SLUG_PREFIXES = (
+    "wheels", "wheel", "engine", "transmission", "gearbox", "hardtop",
+    "seat", "seats", "bumper", "hood", "literature", "sign", "poster",
+    "memorabilia", "gauge", "gauges", "steering-wheel", "part", "parts",
+    "manual", "brochure",
+)
+
+
+def listing_slug(url: str) -> str:
+    return url.rstrip("/").rsplit("/", 1)[-1].lower()
+
+
+def is_parts_listing(title: str, url: str) -> bool:
+    """True for non-vehicle listings. Primary signal: no model year in the title
+    (every real car on BaT is titled with its year). Backstop: a parts-style URL
+    slug, which catches the rare parts listing that does mention a year."""
+    if parse_year_from_title(title) is None:
+        return True
+    slug = listing_slug(url)
+    return any(slug == p or slug.startswith(p + "-") for p in PARTS_SLUG_PREFIXES)
+
+
+def parse_is_modified(text: str) -> bool:
+    return bool(re.search(
+        r"\b(modified|stroker|swapped|ls-?swap|engine-swapped|widebody|wide-body)\b",
+        text, re.IGNORECASE,
+    ))
+
+
+# Rare halo / collector editions worth flagging separately from the base trim.
+SPECIAL_EDITION_PATTERNS = [
+    r"22B", r"N[üu]r(?:burgring)?", r"Type[\s-]?RA", r"Spec[\s-]?R\b",
+    r"Mazdaspeed", r"Final Edition", r"Launch Edition", r"Anniversary",
+    r"GT-APEX", r"S-Tune", r"Works",
+]
+
+
+def parse_special_edition(title: str) -> str | None:
+    for pattern in SPECIAL_EDITION_PATTERNS:
+        match = re.search(pattern, title, re.IGNORECASE)
+        if match:
+            return match.group(0)
+    return None
+
+
+def parse_condition_flag(text: str) -> str | None:
+    flags = [
+        (r"\bsalvage\b", "salvage"),
+        (r"\bproject\b", "project"),
+        (r"\b(restored|restoration)\b", "restored"),
+        (r"\b(track car|race car|track-prepped|race-prepped)\b", "track"),
+        (r"\bbarn[\s-]?find\b", "barn-find"),
+        (r"\brust(?:y|ed)?\b", "rust"),
+    ]
+    for pattern, label in flags:
+        if re.search(pattern, text, re.IGNORECASE):
+            return label
+    return None
+
+
+def parse_is_import(item: dict, title: str) -> bool:
+    """Seller country is an imperfect proxy (a US seller can sell an imported
+    car), so pair it with RHD/JDM/import language in the title."""
+    country = (item.get("country_code") or "").upper()
+    if country and country != "US":
+        return True
+    return bool(re.search(
+        r"\b(RHD|right-hand drive|JDM|import(?:ed)?)\b", title, re.IGNORECASE
+    ))
+
+
 def items_to_results(items: list[dict]) -> list[dict]:
     results = []
     for item in items:
@@ -100,6 +173,14 @@ def items_to_results(items: list[dict]) -> list[dict]:
         if not sold_info:
             continue
         title = item.get("title", "")
+        url = item.get("url", "")
+        if is_parts_listing(title, url):
+            continue
+
+        excerpt = item.get("excerpt", "") or ""
+        text = f"{title} {excerpt}"
+        comments_match = re.search(r"\d+", str(item.get("comments") or "0"))
+
         results.append({
             "title": title,
             "sale_price": sold_info["price"],
@@ -107,9 +188,18 @@ def items_to_results(items: list[dict]) -> list[dict]:
             "year": parse_year_from_title(title),
             "mileage": parse_mileage_from_title(title),
             "trim": parse_trim_from_title(title),
-            "url": item.get("url", ""),
+            "url": url,
             "thumbnail_url": item.get("thumbnail_url", ""),
             "source": "bringatrailer",
+            # WS1 enrichment
+            "excerpt": excerpt[:2000],
+            "no_reserve": bool(item.get("noreserve")),
+            "country_code": item.get("country_code"),
+            "comments_count": int(comments_match.group()) if comments_match else 0,
+            "is_modified": parse_is_modified(text),
+            "special_edition": parse_special_edition(title),
+            "condition_flag": parse_condition_flag(text),
+            "is_import": parse_is_import(item, title),
         })
     return results
 

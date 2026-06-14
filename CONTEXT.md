@@ -77,7 +77,19 @@ auction_results
   - url (text) — link to listing; used as dedup key
   - thumbnail_url (text, nullable)
   - created_at (timestamptz)
+  -- Phase 2 · WS1 enrichment (migration 001_ws1_enrichment.sql) --
+  - excerpt (text, nullable) — listing description text
+  - no_reserve (bool, nullable)
+  - country_code (text, nullable) — seller location
+  - comments_count (int, nullable)
+  - is_modified (bool) — parsed from title/excerpt
+  - special_edition (text, nullable) — e.g. 22B, Nür, Type RA
+  - condition_flag (text, nullable) — project / salvage / restored / track / rust
+  - is_import (bool) — RHD/JDM/non-US signal
 ```
+
+See `PHASE2_PLAN.md` for the Phase 2 roadmap (data quality → valuation → dashboard viz →
+insights) and the Claude API cost/billing notes.
 
 ## GitHub / Account Info
 - Repo: `krispix418/jdm-market-tracker`
