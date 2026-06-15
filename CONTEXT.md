@@ -99,13 +99,21 @@ insights) and the Claude API cost/billing notes.
 ## Status
 - [x] Repo initialized, git identity set
 - [x] Set up Next.js project (App Router + Tailwind + Recharts)
-- [x] Set up Supabase project & schema (37 cars seeded, ~3.9k auction_results)
+- [x] Set up Supabase project & schema (55 cars, ~14.8k auction_results)
 - [x] Build scraper for BringATrailer (Playwright full + simple HTTP modes, dedup by URL)
 - [x] Build frontend: home, dashboard, car detail with price/mileage charts + trim breakdown
 - [x] GitHub Actions workflow for scheduled scraping (weekly simple cron + manual full backfill)
 - [x] Deploy to Vercel — live at https://jdm-market-tracker.vercel.app
 - [ ] Connect Vercel ↔ GitHub for push-to-deploy (currently deploys via `vercel --prod`)
 - [ ] Add Cars & Bids as second source
+
+### Phase 2 (see PHASE2_PLAN.md for detail)
+- [x] WS1 — data quality + enrichment (parts filter, condition/spec fields) + 18-car volume expansion
+- [x] WS2 — condition-aware valuation (mileage depreciation curve, stock/modified segmentation, percentile bands)
+- [x] WS3 — dashboard viz overhaul (diverging movers chart + market-map scatter); homepage ordered by volume
+- [x] WS5 — chart polish (moving-avg relabel, percentile band); km-mileage parsing fixed
+- [ ] WS4 — insights / fun-facts engine (hybrid Claude Haiku; needs `ANTHROPIC_API_KEY`)
+- Next session: blue/orange retheme + WS4 fun-facts engine + hedonic-regression stretch
 
 ## Scraper Notes
 - `scraper/config.py` maps each car/generation → a BaT autocomplete query. A few (Integra Type S, TLX Type S, GR Corolla) are `None` — no BaT page exists yet.
