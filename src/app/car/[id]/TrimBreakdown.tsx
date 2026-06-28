@@ -1,6 +1,7 @@
 "use client";
 
 import type { AuctionResult } from "@/lib/types";
+import { chartColors } from "@/lib/theme";
 
 interface TrimStat {
   trim: string;
@@ -46,7 +47,7 @@ export default function TrimBreakdown({ auctions }: { auctions: AuctionResult[] 
           <div key={s.trim} className="border-b border-card-border pb-4">
             <div className="flex justify-between items-baseline mb-2">
               <div className="flex items-baseline gap-3">
-                <span className="text-sm text-white">{s.trim}</span>
+                <span className="text-sm text-foreground">{s.trim}</span>
                 <span className="text-xs text-subtle">{s.count} sold</span>
               </div>
               <span className="text-sm font-medium text-data-primary">
@@ -56,7 +57,7 @@ export default function TrimBreakdown({ auctions }: { auctions: AuctionResult[] 
             <div className="w-full bg-card-border h-px mb-1.5">
               <div
                 className="h-px"
-                style={{ width: `${barWidth}%`, background: "#c9a84c" }}
+                style={{ width: `${barWidth}%`, background: chartColors.up }}
               />
             </div>
             <div className="flex justify-between text-xs text-subtle">

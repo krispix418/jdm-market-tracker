@@ -213,3 +213,24 @@ Theme: **make this a delight for car geeks hunting fun facts.**
 
 State at end of this session: WS1/WS2/WS3/WS5 shipped + deployed; 55 cars / 14,245 auctions;
 km-mileage parsing fixed; dashboard link restyled. Only WS4 + stretches remain.
+
+---
+
+## Session 2026-06-28 — Editorial rebrand + chart zoom
+
+Shipped (not yet deployed — manual `vercel --prod` when ready):
+- **Rebrand → "The JDM Ledger"** + **broadsheet redesign**: flipped from the dark theme to a
+  light paper/ink canvas with a single **oxblood `#8a3324`** accent (replaced the earlier
+  gold/red/green, and a short-lived navy/orange experiment). Added a **Fraunces** serif for the
+  masthead/headlines (paired with Helvetica labels), bold rules, "The JDM Ledger" wordmark on
+  subpages. Chart colors centralized in `src/lib/theme.ts` (Recharts SVG props can't read CSS
+  `var()`), kept in sync with `globals.css`.
+- **Color semantics:** oxblood = neutral "higher/pricier" cue (market-almanac framing), not good/bad.
+- **Chart zoom:** drag-to-zoom + reset on the Market Map scatter (px→data via the measured grid
+  rect, version-proof for Recharts 3); time-range `<Brush>` on the per-car price chart.
+
+Open / next:
+- **Dashboard perf (now priority):** `next build` static generation of `/` and `/dashboard`
+  times out (>60s) on slow Supabase queries — slim the queries / paginate / cache.
+- WS4 fun-facts engine (needs `ANTHROPIC_API_KEY`); hedonic regression stretch.
+- Optional: headline font is a one-line swap (`--font-serif-display`) if Fraunces isn't the one.

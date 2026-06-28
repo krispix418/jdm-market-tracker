@@ -1,4 +1,7 @@
-# JDM Market Tracker — Project Context
+# The JDM Ledger (JDM Market Tracker) — Project Context
+
+> Branded as **The JDM Ledger** — an editorial "broadsheet" market paper for JDM /
+> sport-car auction values. Internal/repo name remains jdm-market-tracker.
 
 ## What is this?
 A web app that tracks JDM and sport car auction prices over time. Users can browse specific makes/models/generations, view price trends, and see recent auction results. Data is scraped from public auction sites on a schedule.
@@ -112,8 +115,11 @@ insights) and the Claude API cost/billing notes.
 - [x] WS2 — condition-aware valuation (mileage depreciation curve, stock/modified segmentation, percentile bands)
 - [x] WS3 — dashboard viz overhaul (diverging movers chart + market-map scatter); homepage ordered by volume
 - [x] WS5 — chart polish (moving-avg relabel, percentile band); km-mileage parsing fixed
+- [x] Editorial rebrand → **"The JDM Ledger"**: broadsheet light theme (warm paper + ink + single oxblood accent), Fraunces serif masthead/headlines paired with Helvetica labels, bold rules. Chart palette centralized in `src/lib/theme.ts` (kept in sync with the CSS vars in `globals.css`).
+- [x] Chart interactivity: drag-to-zoom + "Reset zoom" on the Market Map scatter (plot rect measured from the rendered grid for exact px→data); time-range `<Brush>` on the per-car price chart.
 - [ ] WS4 — insights / fun-facts engine (hybrid Claude Haiku; needs `ANTHROPIC_API_KEY`)
-- Next session: blue/orange retheme + WS4 fun-facts engine + hedonic-regression stretch
+- [ ] Dashboard data-fetch perf — `/` and `/dashboard` static generation times out (>60s) on slow Supabase queries; needs query slimming / pagination / caching.
+- Next session: dashboard perf fix + WS4 fun-facts engine + hedonic-regression stretch
 
 ## Scraper Notes
 - `scraper/config.py` maps each car/generation → a BaT autocomplete query. A few (Integra Type S, TLX Type S, GR Corolla) are `None` — no BaT page exists yet.
@@ -130,6 +136,7 @@ insights) and the Claude API cost/billing notes.
 - ⚠️ Frontend reads with the anon key, so the `cars` + `auction_results` tables must stay readable by the Supabase `anon` role or the live site shows no data.
 
 ## Decisions Made
+- **Design = editorial "broadsheet"** (light paper/ink, single oxblood accent, Fraunces serif headlines + Helvetica labels). Oxblood is a **neutral price-level cue** — "higher / pricier / hotter" (appreciating, premium, over-fair) — *not* a good/bad signal; depreciating/under-fair is neutral grey. Framing is a **market almanac** (serves both investors and buyers) rather than a deal-finder. Swapping the headline font is a one-line change in `layout.tsx` (CSS var `--font-serif-display` is stable).
 - Generation-specific tracking (e.g., NA Miata vs ND Miata are separate entries)
 - Supabase for data storage over static JSON (need historical time-series)
 - Next.js + Vercel over GitHub Pages (better DX, SSR options, Vercel familiarity goal)

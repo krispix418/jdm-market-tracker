@@ -11,9 +11,10 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { chartColors } from "@/lib/theme";
 
-const UP = "#c9a84c";
-const DOWN = "#b85450";
+const UP = chartColors.up;
+const DOWN = chartColors.down;
 
 export interface MoverDatum {
   id: string;
@@ -27,8 +28,8 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<
   const d = payload[0].payload;
   const up = d.yoyChange >= 0;
   return (
-    <div className="bg-black border border-card-border p-3 text-sm">
-      <p className="text-white">{d.label}</p>
+    <div className="bg-card-bg border border-card-border p-3 text-sm">
+      <p className="text-foreground">{d.label}</p>
       <p className="text-xs mt-1" style={{ color: up ? UP : DOWN }}>
         {up ? "+" : ""}{d.yoyChange}% YoY
       </p>
@@ -48,17 +49,17 @@ export default function MoversChart({ data }: { data: MoverDatum[] }) {
       <BarChart layout="vertical" data={data} margin={{ left: 8, right: 16, top: 4, bottom: 4 }}>
         <XAxis
           type="number"
-          tick={{ fill: "#6b6560", fontSize: 11 }}
+          tick={{ fill: chartColors.axis, fontSize: 11 }}
           tickFormatter={(v) => `${v > 0 ? "+" : ""}${v}%`}
         />
         <YAxis
           type="category"
           dataKey="label"
           width={120}
-          tick={{ fill: "#a8a29a", fontSize: 11 }}
+          tick={{ fill: chartColors.axisStrong, fontSize: 11 }}
           interval={0}
         />
-        <ReferenceLine x={0} stroke="#3a3631" />
+        <ReferenceLine x={0} stroke={chartColors.gridStrong} />
         <Tooltip content={<CustomTooltip />} cursor={{ fill: "#ffffff08" }} />
         <Bar
           dataKey="yoyChange"

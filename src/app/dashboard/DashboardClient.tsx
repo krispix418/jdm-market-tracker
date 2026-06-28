@@ -23,7 +23,7 @@ function CompactRow({ car }: { car: CarTrend }) {
     <Link href={`/car/${car.id}`}>
       <div className="flex justify-between items-center py-2.5 border-b border-card-border card-hover px-2 -mx-2">
         <div className="min-w-0">
-          <p className="text-sm text-white truncate">
+          <p className="text-sm text-foreground truncate">
             {car.make} {car.model} <span className="text-muted">{car.generation}</span>
           </p>
           <p className="text-xs text-subtle mt-0.5">{car.totalSold} sold</p>
@@ -72,15 +72,18 @@ export default function DashboardClient({
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-card-border">
+      <header className="border-b-2 border-card-border">
         <div className="max-w-5xl mx-auto px-6 py-8">
-          <Link href="/" className="text-xs uppercase tracking-[0.15em] text-muted hover:text-white transition-colors">
-            ← Back to Cars
-          </Link>
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mt-8 tracking-tight">
-            Market
-            <br />
-            Dashboard
+          <div className="flex items-baseline justify-between">
+            <Link href="/" className="font-serif text-lg font-bold text-foreground hover:text-trend-up transition-colors">
+              The JDM Ledger
+            </Link>
+            <Link href="/" className="text-xs uppercase tracking-[0.15em] text-muted hover:text-foreground transition-colors">
+              ← Back to Cars
+            </Link>
+          </div>
+          <h1 className="font-serif text-4xl sm:text-5xl font-bold text-foreground mt-8 tracking-tight">
+            Market Dashboard
           </h1>
         </div>
       </header>
@@ -91,7 +94,7 @@ export default function DashboardClient({
           {kpis.map((k) => (
             <div key={k.label} className="bg-background p-6">
               <p className="text-xs uppercase tracking-[0.15em] text-muted">{k.label}</p>
-              <p className="text-3xl font-bold text-white mt-2 tracking-tight">{k.value}</p>
+              <p className="font-serif text-3xl font-bold text-foreground mt-2 tracking-tight">{k.value}</p>
             </div>
           ))}
         </div>

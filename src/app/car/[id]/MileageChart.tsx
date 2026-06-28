@@ -12,9 +12,10 @@ import {
 } from "recharts";
 import type { AuctionResult } from "@/lib/types";
 import { linearRegression, percentile } from "@/lib/valuation";
+import { chartColors } from "@/lib/theme";
 
-const DEAL = "#6e9b7c"; // under fair price
-const PREMIUM = "#c9a84c"; // over fair price
+const DEAL = chartColors.down; // under fair price (neutral grey)
+const PREMIUM = chartColors.up; // over fair price (oxblood)
 
 function formatPrice(value: number): string {
   if (value >= 1000) return `$${(value / 1000).toFixed(0)}k`;
@@ -39,8 +40,8 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<
   if (p.mileage === undefined) return null;
   const over = p.delta >= 0;
   return (
-    <div className="bg-black border border-card-border p-3 text-sm">
-      <p className="text-white font-medium">${p.sale_price.toLocaleString()}</p>
+    <div className="bg-card-bg border border-card-border p-3 text-sm">
+      <p className="text-foreground font-medium">${p.sale_price.toLocaleString()}</p>
       <p className="text-muted text-xs mt-1">{p.mileage.toLocaleString()} miles</p>
       <p className="text-xs" style={{ color: over ? PREMIUM : DEAL }}>
         {over ? "+" : "−"}${Math.abs(Math.round(p.delta)).toLocaleString()} vs fair price
@@ -89,18 +90,18 @@ export default function MileageChart({ auctions }: { auctions: AuctionResult[] }
     <div>
       <ResponsiveContainer width="100%" height={300}>
         <ComposedChart>
-          <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
+          <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
           <XAxis
             dataKey="mileage"
             type="number"
-            tick={{ fill: "#6b6560", fontSize: 11 }}
+            tick={{ fill: chartColors.axis, fontSize: 11 }}
             tickFormatter={formatMileage}
             domain={["dataMin", "dataMax"]}
           />
           <YAxis
             dataKey="sale_price"
             type="number"
-            tick={{ fill: "#6b6560", fontSize: 11 }}
+            tick={{ fill: chartColors.axis, fontSize: 11 }}
             tickFormatter={formatPrice}
             width={55}
           />
@@ -111,7 +112,7 @@ export default function MileageChart({ auctions }: { auctions: AuctionResult[] }
             <Line
               data={fairLine}
               dataKey="fair"
-              stroke="#e5e0d5"
+              stroke={chartColors.dataPrimary}
               strokeWidth={1.5}
               strokeDasharray="5 4"
               dot={false}
@@ -126,9 +127,9 @@ export default function MileageChart({ auctions }: { auctions: AuctionResult[] }
         <div className="mt-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-1 text-xs">
           <span className="text-muted">
             Depreciation ≈{" "}
-            <span className="text-white font-medium">${Math.abs(per10k).toLocaleString()}</span>{" "}
+            <span className="text-foreground font-medium">${Math.abs(per10k).toLocaleString()}</span>{" "}
             per 10k mi · fair price at {formatMileage(medianMi)} mi ≈{" "}
-            <span className="text-white font-medium">${fairAtMedian.toLocaleString()}</span>
+            <span className="text-foreground font-medium">${fairAtMedian.toLocaleString()}</span>
           </span>
           <span className="text-subtle">
             fit R² {reg.r2.toFixed(2)} · {withMileage.length} with mileage

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist_Mono } from "next/font/google";
+import { Geist_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 
 const geistMono = Geist_Mono({
@@ -7,9 +7,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Editorial display serif for mastheads & headlines (variable weight).
+// Swap fonts by changing only this import + call; the CSS var name stays stable.
+const serifDisplay = Fraunces({
+  variable: "--font-serif-display",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
-  title: "JDM Market Tracker",
-  description: "Track auction prices for JDM and sport cars across generations",
+  title: "The JDM Ledger",
+  description: "Auction values and price trends for JDM and sport cars — a market ledger for collectors and buyers.",
 };
 
 export default function RootLayout({
@@ -18,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistMono.variable} h-full antialiased`}>
+    <html lang="en" className={`${geistMono.variable} ${serifDisplay.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

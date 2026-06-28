@@ -41,7 +41,7 @@ export default function TrendToggle({
           onClick={() => setMode("yoy")}
           className={`px-2 py-0.5 text-xs border transition-colors ${
             mode === "yoy"
-              ? "border-white text-white"
+              ? "border-foreground text-foreground"
               : "border-subtle text-subtle hover:text-muted hover:border-muted"
           }`}
         >
@@ -51,7 +51,7 @@ export default function TrendToggle({
           onClick={() => setMode("6mo")}
           className={`px-2 py-0.5 text-xs border transition-colors ${
             mode === "6mo"
-              ? "border-white text-white"
+              ? "border-foreground text-foreground"
               : "border-subtle text-subtle hover:text-muted hover:border-muted"
           }`}
         >

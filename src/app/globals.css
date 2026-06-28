@@ -1,17 +1,21 @@
 @import "tailwindcss";
 
+/* "The JDM Ledger" — Broadsheet palette: ink on warm paper, single oxblood
+   accent. Chart colors are mirrored in src/lib/theme.ts — keep the two in
+   sync. Editorial single-accent: oxblood = appreciating/premium/emphasis,
+   neutral grey = depreciating. */
 :root {
-  --background: #000000;
-  --foreground: #ffffff;
-  --muted: #888888;
-  --subtle: #333333;
-  --card-bg: #0a0a0a;
-  --card-border: #1a1a1a;
-  --accent: #e8e8e8;
-  --trend-up: #c9a84c;
-  --trend-down: #b85450;
-  --data-primary: #d4cfc4;
-  --data-secondary: #6b6560;
+  --background: #f5f1e8;
+  --foreground: #1a1712;
+  --muted: #6f685b;
+  --subtle: #9a917f;
+  --card-bg: #fffdf7;
+  --card-border: #211d16;
+  --accent: #1a1712;
+  --trend-up: #8a3324;
+  --trend-down: #6f685b;
+  --data-primary: #1a1712;
+  --data-secondary: #8c8472;
 }
 
 @theme inline {
@@ -28,6 +32,7 @@
   --color-data-secondary: var(--data-secondary);
   --font-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-serif-display), Georgia, 'Times New Roman', serif;
 }
 
 body {
@@ -41,10 +46,10 @@ body {
 }
 
 .card-hover:hover {
-  background: #111111;
+  background: #efe9db;
 }
 
 ::selection {
-  background: #ffffff;
-  color: #000000;
+  background: #8a3324;
+  color: #f5f1e8;
 }

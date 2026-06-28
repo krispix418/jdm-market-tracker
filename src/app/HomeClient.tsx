@@ -40,7 +40,7 @@ function CarCard({ car }: { car: CarWithStats }) {
 
         <div className="flex justify-between items-baseline">
           <div>
-            <h3 className="text-sm text-white group-hover:underline">
+            <h3 className="text-sm text-foreground group-hover:underline">
               {car.generation}
             </h3>
             <p className="text-xs text-subtle mt-0.5">{yearRange}</p>
@@ -139,13 +139,14 @@ export default function HomeClient({ cars, topMovers }: { cars: CarWithStats[]; 
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-card-border">
+      {/* Masthead */}
+      <header className="border-b-2 border-card-border">
         <div className="max-w-7xl mx-auto px-6 py-12 sm:py-16">
-          <h1 className="text-5xl sm:text-7xl font-bold tracking-tighter text-white leading-none">
-            JDM Market
-            <br />
-            Tracker
+          <p className="text-[11px] uppercase tracking-[0.3em] text-muted">
+            Japanese Domestic Market · Auction Values · Est. 2026
+          </p>
+          <h1 className="mt-3 font-serif font-black text-6xl sm:text-8xl tracking-tight text-foreground leading-[0.95]">
+            The JDM Ledger
           </h1>
           <p className="mt-4 text-muted text-lg max-w-xl">
             Auction data and price trends for Japanese domestic market
@@ -175,7 +176,7 @@ export default function HomeClient({ cars, topMovers }: { cars: CarWithStats[]; 
               placeholder="Search..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 bg-transparent border border-card-border px-4 py-2 text-sm text-white placeholder-subtle focus:outline-none focus:border-muted transition-colors"
+              className="flex-1 bg-transparent border border-card-border px-4 py-2 text-sm text-foreground placeholder-subtle focus:outline-none focus:border-muted transition-colors"
             />
             <select
               value={sort}
@@ -193,7 +194,7 @@ export default function HomeClient({ cars, topMovers }: { cars: CarWithStats[]; 
               onClick={() => setActiveMake(null)}
               className={`px-3 py-1 text-xs border transition-colors ${
                 !activeMake
-                  ? "border-white text-white"
+                  ? "border-foreground text-foreground"
                   : "border-card-border text-subtle hover:text-muted hover:border-muted"
               }`}
             >
@@ -205,7 +206,7 @@ export default function HomeClient({ cars, topMovers }: { cars: CarWithStats[]; 
                 onClick={() => setActiveMake(activeMake === make ? null : make)}
                 className={`px-3 py-1 text-xs border transition-colors ${
                   activeMake === make
-                    ? "border-white text-white"
+                    ? "border-foreground text-foreground"
                     : "border-card-border text-subtle hover:text-muted hover:border-muted"
                 }`}
               >
@@ -231,7 +232,7 @@ export default function HomeClient({ cars, topMovers }: { cars: CarWithStats[]; 
                   }`}>
                     {mover.percentChange > 0 ? "+" : ""}{mover.percentChange}%
                   </p>
-                  <p className="text-xs text-white mt-2">
+                  <p className="text-xs text-foreground mt-2">
                     {mover.model} <span className="text-muted">{mover.generation}</span>
                   </p>
                   <p className="text-xs text-subtle mt-0.5">
@@ -252,8 +253,8 @@ export default function HomeClient({ cars, topMovers }: { cars: CarWithStats[]; 
 
           return (
             <section key={make} className="mb-16">
-              <div className="flex items-baseline gap-4 mb-8 border-b border-card-border pb-4">
-                <h2 className="text-3xl font-bold text-white tracking-tight">
+              <div className="flex items-baseline gap-4 mb-8 border-b-2 border-card-border pb-4">
+                <h2 className="font-serif text-4xl font-bold text-foreground tracking-tight">
                   {make}
                 </h2>
                 <span className="text-sm text-muted">

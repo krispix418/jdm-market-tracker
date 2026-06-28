@@ -9,9 +9,11 @@ import {
   ReferenceArea,
   ResponsiveContainer,
   CartesianGrid,
+  Brush,
 } from "recharts";
 import type { AuctionResult } from "@/lib/types";
 import { percentile } from "@/lib/valuation";
+import { chartColors } from "@/lib/theme";
 
 function formatPrice(value: number): string {
   if (value >= 1000) return `$${(value / 1000).toFixed(0)}k`;
@@ -47,8 +49,8 @@ function CustomTooltip({
   if (!active || !payload?.length) return null;
   const point = payload[0].payload;
   return (
-    <div className="bg-black border border-card-border p-3 text-sm">
-      <p className="text-white font-medium">${point.sale_price.toLocaleString()}</p>
+    <div className="bg-card-bg border border-card-border p-3 text-sm">
+      <p className="text-foreground font-medium">${point.sale_price.toLocaleString()}</p>
       {point.moving_avg && (
         <p className="text-data-primary text-xs">
           {windowSize ?? ""}-sale avg: ${point.moving_avg.toLocaleString()}
@@ -87,26 +89,26 @@ export default function PriceChart({ auctions }: { auctions: AuctionResult[] }) 
 
   return (
     <div>
-      <ResponsiveContainer width="100%" height={350}>
+      <ResponsiveContainer width="100%" height={384}>
         <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
+          <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
           {/* 25th–75th percentile "typical range" band */}
           <ReferenceArea
             y1={p25}
             y2={p75}
-            fill="#c9a84c"
+            fill={chartColors.up}
             fillOpacity={0.07}
-            stroke="#c9a84c"
+            stroke={chartColors.up}
             strokeOpacity={0.15}
             ifOverflow="extendDomain"
           />
           <XAxis
             dataKey="sale_date"
-            tick={{ fill: "#6b6560", fontSize: 11 }}
+            tick={{ fill: chartColors.axis, fontSize: 11 }}
             tickFormatter={(d) => new Date(d).toLocaleDateString("en-US", { month: "short", year: "2-digit" })}
           />
           <YAxis
-            tick={{ fill: "#6b6560", fontSize: 11 }}
+            tick={{ fill: chartColors.axis, fontSize: 11 }}
             tickFormatter={formatPrice}
             width={55}
           />
@@ -114,32 +116,40 @@ export default function PriceChart({ auctions }: { auctions: AuctionResult[] }) 
           <Line
             type="monotone"
             dataKey="sale_price"
-            stroke="#6b6560"
+            stroke={chartColors.axis}
             strokeWidth={1}
-            dot={{ fill: "#d4cfc4", r: 1.5, strokeWidth: 0 }}
-            activeDot={{ fill: "#c9a84c", r: 4, strokeWidth: 0 }}
+            dot={{ fill: chartColors.dataPrimary, r: 1.5, strokeWidth: 0 }}
+            activeDot={{ fill: chartColors.up, r: 4, strokeWidth: 0 }}
           />
           <Line
             type="monotone"
             dataKey="moving_avg"
-            stroke="#c9a84c"
+            stroke={chartColors.up}
             strokeWidth={2}
             dot={false}
             connectNulls
+          />
+          <Brush
+            dataKey="sale_date"
+            height={22}
+            travellerWidth={8}
+            stroke={chartColors.axis}
+            fill="transparent"
+            tickFormatter={(d) => new Date(d).toLocaleDateString("en-US", { month: "short", year: "2-digit" })}
           />
         </LineChart>
       </ResponsiveContainer>
       <div className="flex flex-wrap items-center justify-end gap-4 mt-3 text-xs text-subtle">
         <span className="flex items-center gap-1.5">
-          <span className="w-3 h-px inline-block" style={{ background: "#6b6560" }} />
+          <span className="w-3 h-px inline-block" style={{ background: chartColors.axis }} />
           Individual sales
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-3 h-0.5 inline-block" style={{ background: "#c9a84c" }} />
+          <span className="w-3 h-0.5 inline-block" style={{ background: chartColors.up }} />
           {windowSize}-sale moving avg
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-3 h-2 inline-block" style={{ background: "#c9a84c", opacity: 0.15 }} />
+          <span className="w-3 h-2 inline-block" style={{ background: chartColors.up, opacity: 0.15 }} />
           Typical range (25–75th): ${p25.toLocaleString()}–${p75.toLocaleString()}
         </span>
       </div>
