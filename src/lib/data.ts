@@ -1,6 +1,21 @@
 import { supabase } from "./supabase";
 import type { Car, AuctionResult, CarWithStats } from "./types";
 
+type QueryResult = { data: unknown; error: unknown; count?: number | null };
+
+/** Run a Supabase query with small backoff retries; throw rather than ever
+ *  return silently-incomplete data (a dropped page = wrong stats). */
+async function withRetry(label: string, exec: () => PromiseLike<QueryResult>): Promise<QueryResult> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const res = await exec();
+    if (!res.error) return res;
+    lastError = res.error;
+    await new Promise((r) => setTimeout(r, 150 * (attempt + 1)));
+  }
+  throw new Error(`Supabase ${label} failed after retries: ${JSON.stringify(lastError)}`);
+}
+
 async function fetchAllRows<T>(
   table: string,
   select: string,
@@ -9,26 +24,30 @@ async function fetchAllRows<T>(
 ): Promise<T[]> {
   const PAGE_SIZE = 1000; // PostgREST caps a response at 1000 rows, so we page.
 
-  // One count query up front, then fetch every page concurrently instead of
-  // walking them serially (turns ~N sequential round-trips into ~one).
-  let countQuery = supabase.from(table).select(select, { count: "exact", head: true });
-  if (filter) countQuery = countQuery.eq(filter.column, filter.value);
-  const { count } = await countQuery;
+  const buildPage = (opts: { head?: boolean; from?: number }) => {
+    let query = supabase
+      .from(table)
+      .select(select, opts.head ? { count: "exact", head: true } : undefined);
+    if (opts.from !== undefined) query = query.range(opts.from, opts.from + PAGE_SIZE - 1);
+    if (order) query = query.order(order.column, { ascending: order.ascending });
+    if (filter) query = query.eq(filter.column, filter.value);
+    return query as unknown as PromiseLike<QueryResult>;
+  };
 
+  // One count query up front, then fetch all pages concurrently (turns ~N
+  // sequential round-trips into ~one) — with retries so a rate-limited page
+  // is retried, never silently skipped.
+  const { count } = await withRetry("count", () => buildPage({ head: true }));
   const total = count ?? 0;
   if (total === 0) return [];
 
   const pages = Math.ceil(total / PAGE_SIZE);
-  const requests = Array.from({ length: pages }, (_, p) => {
-    let query = supabase.from(table).select(select).range(p * PAGE_SIZE, p * PAGE_SIZE + PAGE_SIZE - 1);
-    if (order) query = query.order(order.column, { ascending: order.ascending });
-    if (filter) query = query.eq(filter.column, filter.value);
-    return query;
-  });
+  const chunks = await Promise.all(
+    Array.from({ length: pages }, (_, p) => withRetry(`page ${p}`, () => buildPage({ from: p * PAGE_SIZE })))
+  );
 
-  const results = await Promise.all(requests);
   const allRows: T[] = [];
-  for (const { data } of results) {
+  for (const { data } of chunks) {
     if (data) allRows.push(...(data as T[]));
   }
   return allRows;

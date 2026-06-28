@@ -7,7 +7,8 @@ import MileageChart from "./MileageChart";
 import TrimBreakdown from "./TrimBreakdown";
 import ConditionBreakdown from "./ConditionBreakdown";
 import TrendToggle from "./TrendToggle";
-import { percentile, segmentLabel } from "@/lib/valuation";
+import HedonicBreakdown from "./HedonicBreakdown";
+import { percentile, segmentLabel, hedonicModel } from "@/lib/valuation";
 
 function formatPrice(price: number): string {
   return `$${price.toLocaleString()}`;
@@ -45,6 +46,7 @@ export default async function CarDetail({
 
   const yoyTrend = computeYoY(auctions);
   const sixMonthTrend = compute6Month(auctions);
+  const hedonic = hedonicModel(auctions);
 
   const yearRange = car.year_end
     ? `${car.year_start}–${car.year_end}`
@@ -138,6 +140,19 @@ export default async function CarDetail({
               Stock vs Modified
             </h2>
             <ConditionBreakdown auctions={auctions} />
+          </section>
+        )}
+
+        {/* What drives the price — hedonic regression */}
+        {hedonic && (
+          <section>
+            <h2 className="text-xs uppercase tracking-[0.2em] text-muted mb-1">
+              What Drives the Price
+            </h2>
+            <p className="text-xs text-subtle mb-6">
+              Marginal $ value of each attribute, holding the others constant
+            </p>
+            <HedonicBreakdown model={hedonic} />
           </section>
         )}
 
