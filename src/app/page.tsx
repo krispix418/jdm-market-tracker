@@ -1,6 +1,5 @@
-import { getCarsWithStats, getAuctionResults } from "@/lib/data";
-import { compute6Month } from "@/lib/trends";
-import type { CarWithStats } from "@/lib/types";
+import { getMarketData } from "@/lib/data";
+import { compute6Month, sixMonthWindow, formatMonthRange, formatDate } from "@/lib/trends";
 import HomeClient from "./HomeClient";
 
 export interface TopMover {
@@ -24,13 +23,13 @@ function median(values: number[]): number {
 export const revalidate = 3600;
 
 export default async function Home() {
-  const cars = await getCarsWithStats();
+  const { cars, seriesByCar, latestSaleDate } = await getMarketData();
 
   const movers: TopMover[] = [];
   for (const car of cars) {
     if (car.total_sold < 10) continue;
-    const auctions = await getAuctionResults(car.id);
-    const trend = compute6Month(auctions);
+    const series = seriesByCar.get(car.id) ?? [];
+    const trend = compute6Month(series);
     if (trend.direction === "flat") continue;
     movers.push({
       id: car.id,
@@ -38,7 +37,7 @@ export default async function Home() {
       model: car.model,
       generation: car.generation,
       percentChange: trend.percentChange,
-      medianPrice: median(auctions.map((a) => a.sale_price)),
+      medianPrice: median(series.map((s) => s.sale_price)),
     });
   }
 
@@ -46,5 +45,18 @@ export default async function Home() {
     .sort((a, b) => Math.abs(b.percentChange) - Math.abs(a.percentChange))
     .slice(0, 6);
 
-  return <HomeClient cars={cars} topMovers={topMovers} />;
+  const w = sixMonthWindow();
+  const moversCaption = `Median of the last 6 mo (${formatMonthRange(w.recentStart, w.recentEnd)}) vs the prior 6 mo (${formatMonthRange(w.priorStart, w.priorEnd)}) · needs ≥3 sales per window`;
+  const asOf = formatDate(new Date().toISOString().slice(0, 10));
+  const latestSale = latestSaleDate ? formatDate(latestSaleDate) : null;
+
+  return (
+    <HomeClient
+      cars={cars}
+      topMovers={topMovers}
+      moversCaption={moversCaption}
+      asOf={asOf}
+      latestSale={latestSale}
+    />
+  );
 }

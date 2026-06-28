@@ -7,27 +7,51 @@ async function fetchAllRows<T>(
   order?: { column: string; ascending: boolean },
   filter?: { column: string; value: string }
 ): Promise<T[]> {
-  const PAGE_SIZE = 1000;
-  const allRows: T[] = [];
-  let from = 0;
+  const PAGE_SIZE = 1000; // PostgREST caps a response at 1000 rows, so we page.
 
-  while (true) {
-    let query = supabase.from(table).select(select).range(from, from + PAGE_SIZE - 1);
+  // One count query up front, then fetch every page concurrently instead of
+  // walking them serially (turns ~N sequential round-trips into ~one).
+  let countQuery = supabase.from(table).select(select, { count: "exact", head: true });
+  if (filter) countQuery = countQuery.eq(filter.column, filter.value);
+  const { count } = await countQuery;
+
+  const total = count ?? 0;
+  if (total === 0) return [];
+
+  const pages = Math.ceil(total / PAGE_SIZE);
+  const requests = Array.from({ length: pages }, (_, p) => {
+    let query = supabase.from(table).select(select).range(p * PAGE_SIZE, p * PAGE_SIZE + PAGE_SIZE - 1);
     if (order) query = query.order(order.column, { ascending: order.ascending });
     if (filter) query = query.eq(filter.column, filter.value);
+    return query;
+  });
 
-    const { data } = await query;
-    if (!data || data.length === 0) break;
-
-    allRows.push(...(data as T[]));
-    if (data.length < PAGE_SIZE) break;
-    from += PAGE_SIZE;
+  const results = await Promise.all(requests);
+  const allRows: T[] = [];
+  for (const { data } of results) {
+    if (data) allRows.push(...(data as T[]));
   }
-
   return allRows;
 }
 
-export async function getCarsWithStats(): Promise<CarWithStats[]> {
+/** A car's price history, oldest → newest. */
+export type CarSeries = { sale_price: number; sale_date: string }[];
+
+export interface MarketData {
+  cars: CarWithStats[];
+  /** car_id → chronological sale history, for trend/value computation in JS. */
+  seriesByCar: Map<string, CarSeries>;
+  /** newest sale_date present in the data (ISO yyyy-mm-dd), or null if empty. */
+  latestSaleDate: string | null;
+}
+
+/**
+ * One pass over the data: a single `cars` query + a single (paginated) bulk
+ * fetch of all auctions, from which we derive both per-car stats and per-car
+ * time-series. This replaces the old per-car N+1 queries on the home and
+ * dashboard pages.
+ */
+export async function getMarketData(): Promise<MarketData> {
   const { data: cars } = await supabase
     .from("cars")
     .select("*")
@@ -35,41 +59,59 @@ export async function getCarsWithStats(): Promise<CarWithStats[]> {
     .order("model")
     .order("year_start");
 
-  if (!cars) return [];
+  if (!cars) return { cars: [], seriesByCar: new Map(), latestSaleDate: null };
 
-  const auctions = await fetchAllRows<{ car_id: string; sale_price: number; sale_date: string; thumbnail_url: string | null }>(
+  // Ascending so each car's series is chronological and the newest row wins for latest/thumbnail.
+  const rows = await fetchAllRows<{ car_id: string; sale_price: number; sale_date: string; thumbnail_url: string | null }>(
     "auction_results",
     "car_id, sale_price, sale_date, thumbnail_url",
-    { column: "sale_date", ascending: false }
+    { column: "sale_date", ascending: true }
   );
 
-  const auctionsByCar = new Map<string, { prices: number[]; latest: number; thumbnail: string | null }>();
-  for (const a of auctions) {
-    const entry = auctionsByCar.get(a.car_id);
-    if (entry) {
-      entry.prices.push(a.sale_price);
-      if (!entry.thumbnail && a.thumbnail_url) entry.thumbnail = a.thumbnail_url;
-    } else {
-      auctionsByCar.set(a.car_id, { prices: [a.sale_price], latest: a.sale_price, thumbnail: a.thumbnail_url });
+  const seriesByCar = new Map<string, CarSeries>();
+  const metaByCar = new Map<string, { latest: number; thumbnail: string | null }>();
+  let latestSaleDate: string | null = null;
+
+  for (const r of rows) {
+    let series = seriesByCar.get(r.car_id);
+    if (!series) {
+      series = [];
+      seriesByCar.set(r.car_id, series);
     }
+    series.push({ sale_price: r.sale_price, sale_date: r.sale_date });
+
+    // asc order → the last row seen per car is the newest sale.
+    const meta = metaByCar.get(r.car_id) ?? { latest: r.sale_price, thumbnail: null };
+    meta.latest = r.sale_price;
+    if (r.thumbnail_url) meta.thumbnail = r.thumbnail_url;
+    metaByCar.set(r.car_id, meta);
+
+    if (!latestSaleDate || r.sale_date > latestSaleDate) latestSaleDate = r.sale_date;
   }
 
-  return cars.map((car) => {
-    const entry = auctionsByCar.get(car.id);
-    if (!entry) {
+  const carsWithStats: CarWithStats[] = cars.map((car) => {
+    const series = seriesByCar.get(car.id);
+    const meta = metaByCar.get(car.id);
+    if (!series || series.length === 0 || !meta) {
       return { ...car, avg_price: 0, min_price: 0, max_price: 0, total_sold: 0, latest_price: 0, thumbnail_url: null };
     }
-    const { prices, latest, thumbnail } = entry;
+    const prices = series.map((s) => s.sale_price);
     return {
       ...car,
       avg_price: Math.round(prices.reduce((a, b) => a + b, 0) / prices.length),
       min_price: Math.min(...prices),
       max_price: Math.max(...prices),
       total_sold: prices.length,
-      latest_price: latest,
-      thumbnail_url: thumbnail,
+      latest_price: meta.latest,
+      thumbnail_url: meta.thumbnail,
     };
   });
+
+  return { cars: carsWithStats, seriesByCar, latestSaleDate };
+}
+
+export async function getCarsWithStats(): Promise<CarWithStats[]> {
+  return (await getMarketData()).cars;
 }
 
 export async function getCar(id: string): Promise<Car | null> {

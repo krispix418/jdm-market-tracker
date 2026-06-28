@@ -68,7 +68,19 @@ function modelSold(gens: CarWithStats[]): number {
   return gens.reduce((sum, g) => sum + g.total_sold, 0);
 }
 
-export default function HomeClient({ cars, topMovers }: { cars: CarWithStats[]; topMovers: TopMover[] }) {
+export default function HomeClient({
+  cars,
+  topMovers,
+  moversCaption,
+  asOf,
+  latestSale,
+}: {
+  cars: CarWithStats[];
+  topMovers: TopMover[];
+  moversCaption: string;
+  asOf: string;
+  latestSale: string | null;
+}) {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SortOption>("name");
   const [activeMake, setActiveMake] = useState<string | null>(null);
@@ -164,6 +176,10 @@ export default function HomeClient({ cars, topMovers }: { cars: CarWithStats[]; 
               <span className="transition-transform group-hover:translate-x-0.5">→</span>
             </Link>
           </div>
+          <p className="mt-3 text-[11px] uppercase tracking-[0.18em] text-subtle">
+            Figures as of {asOf}
+            {latestSale ? ` · latest recorded sale ${latestSale}` : ""}
+          </p>
         </div>
       </header>
 
@@ -220,9 +236,10 @@ export default function HomeClient({ cars, topMovers }: { cars: CarWithStats[]; 
       {/* Top Movers */}
       {topMovers.length > 0 && !activeMake && !search && (
         <div className="max-w-7xl mx-auto px-6 pt-12 pb-6">
-          <h2 className="text-xs uppercase tracking-[0.2em] text-muted mb-6">
+          <h2 className="text-xs uppercase tracking-[0.2em] text-muted mb-1">
             Top Movers — Last 6 Months
           </h2>
+          <p className="text-xs text-subtle mb-6">{moversCaption}</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-px bg-card-border">
             {topMovers.map((mover) => (
               <Link key={mover.id} href={`/car/${mover.id}`}>

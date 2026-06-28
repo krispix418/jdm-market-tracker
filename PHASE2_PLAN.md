@@ -229,8 +229,17 @@ Shipped (not yet deployed — manual `vercel --prod` when ready):
 - **Chart zoom:** drag-to-zoom + reset on the Market Map scatter (px→data via the measured grid
   rect, version-proof for Recharts 3); time-range `<Brush>` on the per-car price chart.
 
+Also shipped this session:
+- **Perf fix:** killed the per-car N+1 on `/` and `/dashboard` — one `getMarketData()` bulk
+  fetch (cars + all auctions, grouped in JS) + parallelized `fetchAllRows` pagination.
+  Static gen ~60s timeout → <1s; dev minutes → ~2s.
+- **Metric transparency:** date-window captions + "figures as of / latest recorded sale"
+  datelines on relative metrics; `trends.ts` now returns window bounds + sample counts.
+- **Best Value redefined:** "trading below its own recent median" (last 3 mo vs prior 9 mo)
+  via `computeValueSignal`, replacing the old "cheapest median" list.
+
 Open / next:
-- **Dashboard perf (now priority):** `next build` static generation of `/` and `/dashboard`
-  times out (>60s) on slow Supabase queries — slim the queries / paginate / cache.
 - WS4 fun-facts engine (needs `ANTHROPIC_API_KEY`); hedonic regression stretch.
 - Optional: headline font is a one-line swap (`--font-serif-display`) if Fraunces isn't the one.
+- Possible follow-up: precompute per-car stats/trends in the scraper (a `car_stats` table) so the
+  frontend reads a tiny result set — natural to fold into WS4.

@@ -4,7 +4,7 @@ import Link from "next/link";
 import MoversChart, { type MoverDatum } from "./MoversChart";
 import MarketScatter, { type ScatterDatum } from "./MarketScatter";
 
-interface CarTrend {
+export interface CarTrend {
   id: string;
   make: string;
   model: string;
@@ -12,6 +12,16 @@ interface CarTrend {
   medianPrice: number;
   yoyChange: number;
   totalSold: number;
+}
+
+export interface ValueEntry {
+  id: string;
+  make: string;
+  model: string;
+  generation: string;
+  current: number; // median, last 3 mo
+  baseline: number; // median, prior 9 mo
+  discountPct: number; // how far below its own recent median
 }
 
 function formatPrice(price: number): string {
@@ -36,16 +46,44 @@ function CompactRow({ car }: { car: CarTrend }) {
   );
 }
 
+function ValueRow({ car }: { car: ValueEntry }) {
+  return (
+    <Link href={`/car/${car.id}`}>
+      <div className="flex justify-between items-center py-2.5 border-b border-card-border card-hover px-2 -mx-2">
+        <div className="min-w-0">
+          <p className="text-sm text-foreground truncate">
+            {car.make} {car.model} <span className="text-muted">{car.generation}</span>
+          </p>
+          <p className="text-xs text-subtle mt-0.5">
+            now {formatPrice(car.current)} · recent median {formatPrice(car.baseline)}
+          </p>
+        </div>
+        <p className="text-sm font-medium text-muted whitespace-nowrap">−{car.discountPct}%</p>
+      </div>
+    </Link>
+  );
+}
+
 export default function DashboardClient({
   trends,
+  bestValue,
   totalAuctions,
   totalCars,
   overallMedian,
+  moversCaption,
+  valueCaption,
+  asOf,
+  latestSale,
 }: {
   trends: CarTrend[];
+  bestValue: ValueEntry[];
   totalAuctions: number;
   totalCars: number;
   overallMedian: number;
+  moversCaption: string;
+  valueCaption: string;
+  asOf: string;
+  latestSale: string | null;
 }) {
   const label = (t: CarTrend) => `${t.model} ${t.generation}`;
 
@@ -61,7 +99,6 @@ export default function DashboardClient({
     .filter((t) => t.totalSold > 0 && t.medianPrice > 0)
     .map((t) => ({ id: t.id, label: `${t.make} ${label(t)}`, totalSold: t.totalSold, medianPrice: t.medianPrice, yoyChange: t.yoyChange }));
 
-  const bestValue = [...trends].filter((t) => t.medianPrice > 0).sort((a, b) => a.medianPrice - b.medianPrice).slice(0, 6);
   const mostExpensive = [...trends].sort((a, b) => b.medianPrice - a.medianPrice).slice(0, 6);
 
   const kpis = [
@@ -85,6 +122,10 @@ export default function DashboardClient({
           <h1 className="font-serif text-4xl sm:text-5xl font-bold text-foreground mt-8 tracking-tight">
             Market Dashboard
           </h1>
+          <p className="mt-3 text-[11px] uppercase tracking-[0.18em] text-subtle">
+            Figures as of {asOf}
+            {latestSale ? ` · latest recorded sale ${latestSale}` : ""}
+          </p>
         </div>
       </header>
 
@@ -104,7 +145,7 @@ export default function DashboardClient({
           <h2 className="text-xs uppercase tracking-[0.2em] text-muted mb-1">
             Biggest Movers — Year over Year
           </h2>
-          <p className="text-xs text-subtle mb-6">Median price change · click a bar for detail</p>
+          <p className="text-xs text-subtle mb-6">{moversCaption} · click a bar for detail</p>
           <MoversChart data={moverData} />
         </section>
 
@@ -121,10 +162,12 @@ export default function DashboardClient({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-14">
           <section>
             <h2 className="text-xs uppercase tracking-[0.2em] text-muted mb-1">Best Value</h2>
-            <p className="text-xs text-subtle mb-4">Lowest median price</p>
-            {bestValue.map((car) => (
-              <CompactRow key={car.id} car={car} />
-            ))}
+            <p className="text-xs text-subtle mb-4">{valueCaption}</p>
+            {bestValue.length > 0 ? (
+              bestValue.map((car) => <ValueRow key={car.id} car={car} />)
+            ) : (
+              <p className="text-sm text-subtle italic">No cars trading below their recent median right now.</p>
+            )}
           </section>
           <section>
             <h2 className="text-xs uppercase tracking-[0.2em] text-muted mb-1">Most Expensive</h2>

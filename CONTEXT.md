@@ -117,9 +117,11 @@ insights) and the Claude API cost/billing notes.
 - [x] WS5 — chart polish (moving-avg relabel, percentile band); km-mileage parsing fixed
 - [x] Editorial rebrand → **"The JDM Ledger"**: broadsheet light theme (warm paper + ink + single oxblood accent), Fraunces serif masthead/headlines paired with Helvetica labels, bold rules. Chart palette centralized in `src/lib/theme.ts` (kept in sync with the CSS vars in `globals.css`).
 - [x] Chart interactivity: drag-to-zoom + "Reset zoom" on the Market Map scatter (plot rect measured from the rendered grid for exact px→data); time-range `<Brush>` on the per-car price chart.
+- [x] Dashboard/home perf — replaced the per-car N+1 query loops with a single `getMarketData()` bulk fetch (cars + all auctions grouped in JS) and parallelized `fetchAllRows` pagination. Static-gen ~60s timeout → <1s; dev loads minutes → ~2s.
+- [x] Metric transparency — relative metrics now carry their date windows + "figures as of / latest recorded sale" datelines (YoY movers, 6-mo movers, TrendToggle). `trends.ts` returns window bounds + per-window sample counts.
+- [x] Best Value redefined — was "cheapest median"; now **"trading below its own recent median"** (last 3 mo vs the prior 9 mo dip signal) via `computeValueSignal`.
 - [ ] WS4 — insights / fun-facts engine (hybrid Claude Haiku; needs `ANTHROPIC_API_KEY`)
-- [ ] Dashboard data-fetch perf — `/` and `/dashboard` static generation times out (>60s) on slow Supabase queries; needs query slimming / pagination / caching.
-- Next session: dashboard perf fix + WS4 fun-facts engine + hedonic-regression stretch
+- Next session: WS4 fun-facts engine + hedonic-regression stretch
 
 ## Scraper Notes
 - `scraper/config.py` maps each car/generation → a BaT autocomplete query. A few (Integra Type S, TLX Type S, GR Corolla) are `None` — no BaT page exists yet.
