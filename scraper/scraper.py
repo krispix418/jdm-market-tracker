@@ -395,6 +395,13 @@ def run(use_playwright: bool = True):
 
     print(f"\n🏁 Done! {total_new} new auction results added.")
 
+    # WS4 — refresh the fun-facts after new data lands (no-op without an API key).
+    try:
+        from insights import generate_insights
+        generate_insights(supabase)
+    except Exception as e:
+        print(f"⚠️ Insight generation skipped/failed: {e}")
+
 
 if __name__ == "__main__":
     import sys

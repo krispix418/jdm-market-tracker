@@ -1,4 +1,4 @@
-import { getMarketData } from "@/lib/data";
+import { getMarketData, getInsights } from "@/lib/data";
 import { computeYoY, computeValueSignal, yoyWindow, formatMonthRange, formatDate } from "@/lib/trends";
 import DashboardClient, { type CarTrend, type ValueEntry } from "./DashboardClient";
 
@@ -15,6 +15,7 @@ export const revalidate = 3600;
 
 export default async function Dashboard() {
   const { cars, seriesByCar, latestSaleDate } = await getMarketData();
+  const insights = await getInsights("market");
 
   const trends: CarTrend[] = [];
   const valueEntries: ValueEntry[] = [];
@@ -67,6 +68,7 @@ export default async function Dashboard() {
     <DashboardClient
       trends={trends}
       bestValue={bestValue}
+      insights={insights}
       totalAuctions={totalAuctions}
       totalCars={totalCars}
       overallMedian={overallMedian}

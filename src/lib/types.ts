@@ -31,6 +31,16 @@ export interface AuctionResult {
   is_import: boolean | null;
 }
 
+export interface Insight {
+  id: string;
+  scope: string; // 'market' | 'car'
+  car_id: string | null;
+  kind: string; // 'mover' | 'ratio' | 'icon_entry' | 'deal' | 'premium'
+  text: string;
+  metric_value: number | null;
+  generated_at: string;
+}
+
 export interface CarWithStats extends Car {
   avg_price: number;
   min_price: number;

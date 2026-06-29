@@ -1,8 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import type { Insight } from "@/lib/types";
 import MoversChart, { type MoverDatum } from "./MoversChart";
 import MarketScatter, { type ScatterDatum } from "./MarketScatter";
+
+const KIND_LABEL: Record<string, string> = {
+  mover: "Mover",
+  ratio: "Price Ratio",
+  icon_entry: "Icon Entry",
+  deal: "Deal",
+  premium: "Premium",
+};
 
 export interface CarTrend {
   id: string;
@@ -67,6 +76,7 @@ function ValueRow({ car }: { car: ValueEntry }) {
 export default function DashboardClient({
   trends,
   bestValue,
+  insights,
   totalAuctions,
   totalCars,
   overallMedian,
@@ -77,6 +87,7 @@ export default function DashboardClient({
 }: {
   trends: CarTrend[];
   bestValue: ValueEntry[];
+  insights: Insight[];
   totalAuctions: number;
   totalCars: number;
   overallMedian: number;
@@ -139,6 +150,33 @@ export default function DashboardClient({
             </div>
           ))}
         </div>
+
+        {/* The Ledger Says — WS4 fun-facts */}
+        {insights.length > 0 && (
+          <section>
+            <h2 className="font-serif text-2xl font-bold text-foreground tracking-tight mb-1">
+              The Ledger Says
+            </h2>
+            <p className="text-xs text-subtle mb-6">Auto-generated from the latest auction data · refreshed weekly</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-card-border">
+              {insights.map((ins) => {
+                const body = (
+                  <div className="bg-background p-5 h-full card-hover">
+                    <p className="text-[10px] uppercase tracking-[0.18em] text-trend-up mb-2">
+                      {KIND_LABEL[ins.kind] ?? ins.kind}
+                    </p>
+                    <p className="text-sm text-foreground leading-snug">{ins.text}</p>
+                  </div>
+                );
+                return ins.car_id ? (
+                  <Link key={ins.id} href={`/car/${ins.car_id}`}>{body}</Link>
+                ) : (
+                  <div key={ins.id}>{body}</div>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {/* Biggest movers */}
         <section>

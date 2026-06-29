@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import type { Car, AuctionResult, CarWithStats } from "./types";
+import type { Car, AuctionResult, CarWithStats, Insight } from "./types";
 
 type QueryResult = { data: unknown; error: unknown; count?: number | null };
 
@@ -131,6 +131,15 @@ export async function getMarketData(): Promise<MarketData> {
 
 export async function getCarsWithStats(): Promise<CarWithStats[]> {
   return (await getMarketData()).cars;
+}
+
+/** WS4 fun-facts. Returns [] gracefully if the table doesn't exist yet. */
+export async function getInsights(scope: "market" | "car" = "market", carId?: string): Promise<Insight[]> {
+  let query = supabase.from("insights").select("*").eq("scope", scope).order("metric_value", { ascending: false });
+  if (carId) query = query.eq("car_id", carId);
+  const { data, error } = await query;
+  if (error) return [];
+  return (data ?? []) as Insight[];
 }
 
 export async function getCar(id: string): Promise<Car | null> {

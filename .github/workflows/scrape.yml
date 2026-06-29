@@ -28,6 +28,8 @@ jobs:
       MODE: ${{ github.event.inputs.mode || 'simple' }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      # WS4 fun-facts engine. If unset, insight generation is skipped gracefully.
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     steps:
       - uses: actions/checkout@v5
 
