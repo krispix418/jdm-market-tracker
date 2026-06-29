@@ -238,8 +238,20 @@ Also shipped this session:
 - **Best Value redefined:** "trading below its own recent median" (last 3 mo vs prior 9 mo)
   via `computeValueSignal`, replacing the old "cheapest median" list.
 
+Also shipped (later in the same session):
+- **Hedonic regression** — "What Drives the Price" on car pages (multivariate OLS for marginal
+  attribute values; guards against thin/noisy features; modified/import flagged as text-detected).
+- **WS4 insights engine — built & deployed, dormant pending activation.** Scraper computes facts
+  (movers / ratios / cheapest-icon / deals / special-edition premiums) → grounded Haiku phrasing →
+  `insights` table → "The Ledger Says" dashboard strip. Skips cleanly with no key.
+  - Activate: key + ~$5 credit → run `migrations/003_insights.sql` → `gh secret set
+    ANTHROPIC_API_KEY` + `scraper/.env` → `python scraper/insights.py`.
+- Headline font: settled on **Fraunces** (swap is one line via `--font-serif-display`).
+
 Open / next:
-- WS4 fun-facts engine (needs `ANTHROPIC_API_KEY`); hedonic regression stretch.
-- Optional: headline font is a one-line swap (`--font-serif-display`) if Fraunces isn't the one.
+- Activate WS4 (create the Anthropic key).
+- Cars & Bids 2nd source.
+- Hedonic stretch (log/power curves); per-car insight blurbs (WS4 currently market-scope only).
+- WS6 idea: search-volume "hype index" — deferred (no reliable free source, hard to ground).
 - Possible follow-up: precompute per-car stats/trends in the scraper (a `car_stats` table) so the
-  frontend reads a tiny result set — natural to fold into WS4.
+  frontend reads a tiny result set.

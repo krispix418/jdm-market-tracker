@@ -120,8 +120,11 @@ insights) and the Claude API cost/billing notes.
 - [x] Dashboard/home perf — replaced the per-car N+1 query loops with a single `getMarketData()` bulk fetch (cars + all auctions grouped in JS) and parallelized `fetchAllRows` pagination. Static-gen ~60s timeout → <1s; dev loads minutes → ~2s.
 - [x] Metric transparency — relative metrics now carry their date windows + "figures as of / latest recorded sale" datelines (YoY movers, 6-mo movers, TrendToggle). `trends.ts` returns window bounds + per-window sample counts.
 - [x] Best Value redefined — was "cheapest median"; now **"trading below its own recent median"** (last 3 mo vs the prior 9 mo dip signal) via `computeValueSignal`.
-- [ ] WS4 — insights / fun-facts engine (hybrid Claude Haiku; needs `ANTHROPIC_API_KEY`)
-- Next session: WS4 fun-facts engine + hedonic-regression stretch
+- [x] Hedonic regression — "What Drives the Price" on car pages: multivariate OLS (mileage/age/modified/special/import → marginal $), n≥20, no-variance + sparse 0/1 flags auto-dropped, modified/import flagged "≈ text-detected". See `src/lib/valuation.ts` + `car/[id]/HedonicBreakdown.tsx`.
+- [~] WS4 — insights / fun-facts engine: **code built & deployed, dormant pending activation.** Scraper computes facts (movers / ratios / cheapest-icon / deals / special-edition premiums) → Haiku phrases them (grounded) → `insights` table → "The Ledger Says" dashboard strip.
+  - **Activate:** create `ANTHROPIC_API_KEY` + ~$5 credit → run `scraper/migrations/003_insights.sql` in Supabase → `gh secret set ANTHROPIC_API_KEY` + add to `scraper/.env` → `python scraper/insights.py` (standalone, no full scrape needed). Weekly scrape refreshes it after.
+- [ ] WS6 idea — "hype index" from search-volume/cultural-trend data; deferred (no reliable free source, harder to ground than auction data).
+- Next session: activate WS4 (make the key) + Cars & Bids 2nd source + hedonic stretch.
 
 ## Scraper Notes
 - `scraper/config.py` maps each car/generation → a BaT autocomplete query. A few (Integra Type S, TLX Type S, GR Corolla) are `None` — no BaT page exists yet.
