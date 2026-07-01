@@ -255,3 +255,29 @@ Open / next:
 - WS6 idea: search-volume "hype index" — deferred (no reliable free source, hard to ground).
 - Possible follow-up: precompute per-car stats/trends in the scraper (a `car_stats` table) so the
   frontend reads a tiny result set.
+
+### Look & feel — fonts + WebGL flourishes (wishlist, 2026-06-29)
+
+- [ ] **Try the `Bros Oskon 90s` font.** Retro-display face — could be a fun JDM-90s-tuner
+      headline/masthead voice. Currently headlines = **Fraunces** via `--font-serif-display`
+      (swap is ~one line per the note above; see `src/app/globals.css`). Eval as an *alt
+      masthead/accent* face first — test it against the broadsheet/ink aesthetic before
+      replacing Fraunces wholesale (might read more "garage flyer" than "market almanac").
+      Need to confirm license + a self-host source (likely not on Google Fonts).
+
+- [ ] **Evaluate these repos to spice up the site** (caveat: all glassy/futuristic WebGL — watch
+      the clash with the light paper/editorial brand; best used *sparingly* as accents, not chrome):
+  - [ ] **ShaderGradient** — https://github.com/ruucm/shadergradient — animated gradient meshes.
+        Candidate for the homepage hero backdrop or the dashboard "The Ledger Says" strip. Watch
+        perf (it's three.js under the hood) + contrast against ink-on-paper text.
+  - [ ] **liquid-logo** — https://github.com/paper-design/liquid-logo — metallic/liquid logo
+        effect. Could animate "The JDM Ledger" wordmark, or a chrome treatment on car badges.
+  - [ ] **liquid-glass-js** — https://github.com/dashersw/liquid-glass-js — Apple-style liquid-glass
+        UI. Candidate for cards/tooltips/modals (hover states on car tiles). Heaviest brand-clash
+        risk vs the flat broadsheet look — prototype on one card before committing.
+  - [ ] **react-three-fiber** — https://github.com/pmndrs/react-three-fiber — the React three.js
+        renderer that underpins most of the above. If we adopt *any* of these, standardize on r3f.
+        Stretch: a lightweight 3D car/wheel hero on the landing page.
+  - [ ] **Decision gate before building any:** bundle-size + LCP/perf budget check (we fought a
+        static-gen timeout this round — don't regress), mobile fallback, and a "does it serve the
+        almanac brand or just decorate?" gut check. Pick **one** to prototype, don't add all four.
