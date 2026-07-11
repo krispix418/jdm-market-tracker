@@ -281,3 +281,41 @@ Open / next:
   - [ ] **Decision gate before building any:** bundle-size + LCP/perf budget check (we fought a
         static-gen timeout this round — don't regress), mobile fallback, and a "does it serve the
         almanac brand or just decorate?" gut check. Pick **one** to prototype, don't add all four.
+
+---
+
+## Workstream 7 — "$160 glow-up" (funded, 2026-07-04)
+
+**Budget:** ~$160 personal AI spend, use-it-or-lose-it by **2026-12-31**. Goal: turn the Ledger
+from "nice dashboard" into "car nerds bookmark this." Reality check — Haiku insights + embeddings
+are pennies at this scale, so the two line items that actually consume the budget are **image
+generation** (priced per image) and **volume LLM extraction** (thousands of listings). Front-load
+those two before year-end so credits don't expire unused.
+
+- [ ] **~$60 — Image generation for the site** (biggest *visible* win, real per-image cost).
+  - Per-car OG / social-share cards (55 cars → auto-generated share images).
+  - A broadsheet-style hero image; paper/ink textures to pair with the WebGL flourishes above.
+  - **Batch-generate** a pile of assets in one go rather than one-off (spends predictably before
+    the Dec 31 expiry; also easier to keep a consistent look).
+  - Keep on-brand: light paper/ink editorial aesthetic, not glossy AI-slop.
+
+- [ ] **~$50 — Richer LLM features (step up from Haiku → Sonnet/Opus where voice matters).**
+  - Per-car insight blurbs (WS4 is market-scope only today — extend to individual cars).
+  - A weekly auto-generated "editorial column" / market wrap.
+  - Phrase the hedonic regression results ("What Drives the Price") in plain English.
+  - **Try Opus for the insights phrasing** — sharper editorial voice than Haiku; costs more but
+    the run is tiny, so the quality bump is cheap. (Model id `claude-opus-4-8`, $5/$25 per 1M;
+    vs Haiku `claude-haiku-4-5`, $1/$5. Current insights use Haiku — see `scraper/insights.py`.)
+
+- [ ] **~$30 — LLM-powered enrichment for the Cars & Bids 2nd source.**
+  - Use Claude to parse messy listings into our schema at volume — this genuinely consumes tokens
+    across thousands of auctions, and it's the unlock for more data = better fun facts.
+  - Ties into the existing "Cars & Bids 2nd source" open item above.
+
+- [ ] **~$20 — Embeddings for "find similar cars" / semantic search.**
+  - Dirt cheap, high delight-per-dollar for a data-nerd audience. Precompute per-car embeddings
+    (pairs well with the `car_stats` precompute idea above).
+
+- [ ] **Spend-tracking note:** at side-project scale $160 is hard to fully burn — treat it as
+      "remove the mental cost ceiling," not a target. Prioritize image gen + C&B enrichment
+      (the budget-absorbing items); everything else is nearly free.
