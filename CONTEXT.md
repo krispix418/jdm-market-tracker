@@ -102,14 +102,16 @@ insights) and the Claude API cost/billing notes.
 ## Status
 - [x] Repo initialized, git identity set
 - [x] Set up Next.js project (App Router + Tailwind + Recharts)
-- [x] Set up Supabase project & schema (55 cars, ~14.8k auction_results)
+- [x] Set up Supabase project & schema (55 cars; 7,307 unique auction_results after the 2026-10-06 dedupe)
 - [x] Build scraper for BringATrailer (Playwright full + simple HTTP modes, dedup by URL)
 - [x] Build frontend: home, dashboard, car detail with price/mileage charts + trim breakdown
 - [x] GitHub Actions workflow for scheduled scraping (weekly simple cron + manual full backfill)
 - [x] Deploy to Vercel — live at https://jdm-market-tracker.vercel.app
 - [x] Uptime hardening (2026-10-05) — Supabase keepalive (daily Vercel cron + weekly CI ping) + scrape-failure alert issues. See "Keepalive & Outage Recovery".
 - [x] Connect Vercel ↔ GitHub for push-to-deploy (2026-10-06) — pushes to `main` auto-deploy to production
-- [ ] Add Cars & Bids as second source
+- [x] Dark-only "night broadsheet" theme (2026-10-06) — warm charcoal `#15130f`, off-white ink, rust accent `#d0674f`. Palette lives in `globals.css` + `src/lib/theme.ts` (keep in sync).
+- [x] Dedupe fix (2026-10-06) — see "Duplicate Auctions Incident".
+- [ ] ~~Add Cars & Bids as second source~~ — **ruled out**: C&B Terms of Use ban scraping/automated extraction for any unauthorized purpose, and the site 403s plain scripts. Alternatives shortlisted (unverified): eBay API (sold data is restricted access), Hagerty Marketplace, Collecting Cars, Classic.com (partnership only), Japan auction data (paid).
 
 ### Phase 2 (see PHASE2_PLAN.md for detail)
 - [x] WS1 — data quality + enrichment (parts filter, condition/spec fields) + 18-car volume expansion
@@ -157,10 +159,18 @@ insights) and the Claude API cost/billing notes.
 
 **FYI:** Supabase's "no GitHub repo connected" banner is its optional branching/migrations integration — not used here; CI talks to Supabase via repo secrets.
 
+## Duplicate Auctions Incident (fixed 2026-10-06)
+- **Bug:** `get_existing_urls()` in `scraper.py` did a bare `select("url")`, which Supabase caps at 1000 rows. Once the table passed 1000 rows, dedup missed most stored URLs and every scrape re-inserted them. Result: 17,477 rows but only 7,307 unique auctions (10,170 dupes, up to 12 copies of one auction). Inflated "sold" counts and skewed medians/trends/hedonic.
+- **Fix:** paginated `get_existing_urls()` (ordered by id). Ran `scraper/migrations/004_dedupe_auction_results.sql`: backup table `auction_results_backup_20261006` (RLS on, not API-readable) → deleted dupes keeping the newest copy (it always had the most complete enrichment) → added `unique (url)` constraint `auction_results_url_key`.
+- **Lesson:** any Supabase read that can exceed 1000 rows must paginate (`fetchAllRows` in `src/lib/data.ts`, `_fetch_all` in `insights.py`).
+- **TODO:** drop the backup table a few weeks after 2026-10-06 once numbers look right (command at bottom of 004).
+- Now that `url` is unique, a duplicate insert will error and fail the scrape (which opens a `scrape-failure` issue), so a regression can't silently happen again.
+
 ## Decisions Made
 - **Design = editorial "broadsheet"** (light paper/ink, single oxblood accent, Fraunces serif headlines + Helvetica labels). Oxblood is a **neutral price-level cue** — "higher / pricier / hotter" (appreciating, premium, over-fair) — *not* a good/bad signal; depreciating/under-fair is neutral grey. Framing is a **market almanac** (serves both investors and buyers) rather than a deal-finder. Swapping the headline font is a one-line change in `layout.tsx` (CSS var `--font-serif-display` is stable).
 - Generation-specific tracking (e.g., NA Miata vs ND Miata are separate entries)
 - Supabase for data storage over static JSON (need historical time-series)
 - Next.js + Vercel over GitHub Pages (better DX, SSR options, Vercel familiarity goal)
 - Start with BringATrailer as primary data source
+- Cars & Bids not used — their ToS prohibits scraping; only add sources whose terms allow it (check ToS + robots.txt first)
 - Supabase keepalive via Vercel cron (not only GitHub Actions) — Vercel crons don't get disabled by repo inactivity
