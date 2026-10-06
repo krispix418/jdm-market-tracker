@@ -107,6 +107,7 @@ insights) and the Claude API cost/billing notes.
 - [x] Build frontend: home, dashboard, car detail with price/mileage charts + trim breakdown
 - [x] GitHub Actions workflow for scheduled scraping (weekly simple cron + manual full backfill)
 - [x] Deploy to Vercel — live at https://jdm-market-tracker.vercel.app
+- [x] Uptime hardening (2026-10-05) — Supabase keepalive (daily Vercel cron + weekly CI ping) + scrape-failure alert issues. See "Keepalive & Outage Recovery".
 - [ ] Connect Vercel ↔ GitHub for push-to-deploy (currently deploys via `vercel --prod`)
 - [ ] Add Cars & Bids as second source
 
@@ -132,13 +133,29 @@ insights) and the Claude API cost/billing notes.
 - **Full mode** (`python scraper.py`): Playwright clicks "Show More" through all pages (up to MAX_PAGES=50). For backfills.
 - Workflow: `.github/workflows/scrape.yml` — weekly Mondays ~6am ET (simple), plus manual `workflow_dispatch` with a `mode` dropdown (`gh workflow run "Scrape BaT auctions" -f mode=full`).
 - Secrets `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` are set in the GitHub repo.
+- The workflow pings Supabase first (before deps install), then on failure opens/comments on a single `scrape-failure` issue; it auto-closes on the next success.
 
 ## Deployment (Vercel)
 - Live: https://jdm-market-tracker.vercel.app (project `krispix418/jdm-market-tracker`, team "Chris' projects").
 - `vercel.json` pins `"framework": "nextjs"` (auto-detection whiffed once, so it's explicit).
 - Env vars set in Vercel for Production + Development: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (anon key — safe client-side). Preview not set yet.
 - Deploy manually with `vercel --prod` from the project root. Push-to-deploy not wired yet (connect repo in Vercel dashboard → Settings → Git to enable).
+- Cron: `vercel.json` → `/api/keepalive` daily at 12:00 UTC (`src/app/api/keepalive/route.ts`, one-row read of `cars`). Check with `vercel crons ls`. Hobby plan = max once/day, fires anytime within the hour.
 - ⚠️ Frontend reads with the anon key, so the `cars` + `auction_results` tables must stay readable by the Supabase `anon` role or the live site shows no data.
+
+## Keepalive & Outage Recovery
+**What happened (Jul–Oct 2026):** no commits after Jul 10 → GitHub auto-disabled the scheduled scrape (`disabled_inactivity`, 60-day rule). Before that, the scrape failed silently for ~6 weeks (Jul 13–Aug 17), and the Supabase free-tier project auto-paused (7 days idle) — Sep 7/14 runs died with `httpx.ConnectError: Name or service not known`. The live site kept showing cached data, so nothing looked broken.
+
+**Fixed 2026-10-05:** restored the project in the Supabase dashboard → `gh workflow enable scrape.yml` → manual simple run added 475 auctions → added keepalive + failure alerts (above).
+
+**If it happens again:**
+1. Supabase dashboard → project → **Restore project** (only possible within ~90 days of pausing).
+2. `gh workflow list --all` — if `disabled_inactivity`, run `gh workflow enable scrape.yml`.
+3. Test: `gh workflow run scrape.yml -f mode=simple` and `curl https://jdm-market-tracker.vercel.app/api/keepalive` → `{"ok":true}`.
+
+**Remaining catch:** the GitHub workflow still gets disabled after 60 days without commits (the Vercel cron keeps Supabase alive regardless, but scraping stops and no failure issue fires because nothing runs). Glance at Actions every ~2 months.
+
+**FYI:** Supabase's "no GitHub repo connected" banner is its optional branching/migrations integration — not used here; CI talks to Supabase via repo secrets.
 
 ## Decisions Made
 - **Design = editorial "broadsheet"** (light paper/ink, single oxblood accent, Fraunces serif headlines + Helvetica labels). Oxblood is a **neutral price-level cue** — "higher / pricier / hotter" (appreciating, premium, over-fair) — *not* a good/bad signal; depreciating/under-fair is neutral grey. Framing is a **market almanac** (serves both investors and buyers) rather than a deal-finder. Swapping the headline font is a one-line change in `layout.tsx` (CSS var `--font-serif-display` is stable).
@@ -146,3 +163,4 @@ insights) and the Claude API cost/billing notes.
 - Supabase for data storage over static JSON (need historical time-series)
 - Next.js + Vercel over GitHub Pages (better DX, SSR options, Vercel familiarity goal)
 - Start with BringATrailer as primary data source
+- Supabase keepalive via Vercel cron (not only GitHub Actions) — Vercel crons don't get disabled by repo inactivity
