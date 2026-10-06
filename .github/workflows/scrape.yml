@@ -19,6 +19,10 @@ concurrency:
   group: scrape
   cancel-in-progress: false
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   scrape:
     runs-on: ubuntu-latest
@@ -32,6 +36,20 @@ jobs:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     steps:
       - uses: actions/checkout@v5
+
+      # Runs before anything else (and before any dependency install can fail)
+      # so the Supabase free-tier project sees weekly traffic no matter what
+      # happens later in the job, and stays out of auto-pause.
+      - name: Keepalive ping to Supabase
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 \
+            "$SUPABASE_URL/rest/v1/cars?select=id&limit=1" \
+            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY")
+          echo "Supabase keepalive: HTTP $code"
+          if [ "$code" != "200" ]; then
+            echo "::warning::Supabase keepalive got HTTP $code — project may be paused or unreachable"
+          fi
 
       - uses: actions/setup-python@v6
         with:
@@ -56,3 +74,62 @@ jobs:
             echo "⚡ Running simple scrape (newest ~24/model)"
             python scraper.py --simple
           fi
+
+      # --- Failure / recovery alerting -------------------------------------
+      # Opens (or comments on) a single tracking issue when the scrape fails,
+      # and auto-closes it the next time the scrape succeeds. This is what
+      # would have caught the 6-week silent outage in July/August.
+      - name: Open or update failure issue
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              labels: "scrape-failure",
+            });
+            if (issues.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issues[0].number,
+                body: `Still failing as of ${new Date().toISOString()}.\nRun: ${runUrl}`,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: "🚨 Scrape BaT auctions workflow is failing",
+                body: `The scheduled scrape failed.\nRun: ${runUrl}\n\nThis issue stays open and gets a comment on each further failure. It auto-closes the next time the scrape succeeds.`,
+                labels: ["scrape-failure"],
+              });
+            }
+
+      - name: Close failure issue on success
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              labels: "scrape-failure",
+            });
+            for (const issue of issues) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: "✅ Scrape succeeded again — closing.",
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: "closed",
+              });
+            }
