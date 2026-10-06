@@ -317,8 +317,23 @@ def get_cars_from_db() -> list[dict]:
 
 
 def get_existing_urls() -> set[str]:
-    resp = supabase.table("auction_results").select("url").execute()
-    return {r["url"] for r in resp.data}
+    # Page through every row — a bare select() caps at Supabase's 1000-row
+    # default, which made dedup miss most stored URLs and re-insert them.
+    # Ordered so pages don't shift between requests.
+    urls, start = set(), 0
+    while True:
+        resp = (
+            supabase.table("auction_results")
+            .select("url")
+            .order("id")
+            .range(start, start + 999)
+            .execute()
+        )
+        batch = resp.data or []
+        urls.update(r["url"] for r in batch)
+        if len(batch) < 1000:
+            return urls
+        start += 1000
 
 
 def auction_matches_car(auction: dict, car: dict) -> bool:
