@@ -108,7 +108,7 @@ insights) and the Claude API cost/billing notes.
 - [x] GitHub Actions workflow for scheduled scraping (weekly simple cron + manual full backfill)
 - [x] Deploy to Vercel — live at https://jdm-market-tracker.vercel.app
 - [x] Uptime hardening (2026-10-05) — Supabase keepalive (daily Vercel cron + weekly CI ping) + scrape-failure alert issues. See "Keepalive & Outage Recovery".
-- [ ] Connect Vercel ↔ GitHub for push-to-deploy (currently deploys via `vercel --prod`)
+- [x] Connect Vercel ↔ GitHub for push-to-deploy (2026-10-06) — pushes to `main` auto-deploy to production
 - [ ] Add Cars & Bids as second source
 
 ### Phase 2 (see PHASE2_PLAN.md for detail)
@@ -139,7 +139,7 @@ insights) and the Claude API cost/billing notes.
 - Live: https://jdm-market-tracker.vercel.app (project `krispix418/jdm-market-tracker`, team "Chris' projects").
 - `vercel.json` pins `"framework": "nextjs"` (auto-detection whiffed once, so it's explicit).
 - Env vars set in Vercel for Production + Development: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (anon key — safe client-side). Preview not set yet.
-- Deploy manually with `vercel --prod` from the project root. Push-to-deploy not wired yet (connect repo in Vercel dashboard → Settings → Git to enable).
+- **Push-to-deploy is on:** pushing to `main` deploys production; other branches get preview deploys (Preview env vars not set yet, so previews may show no data). `vercel --prod` still works as a manual fallback.
 - Cron: `vercel.json` → `/api/keepalive` daily at 12:00 UTC (`src/app/api/keepalive/route.ts`, one-row read of `cars`). Check with `vercel crons ls`. Hobby plan = max once/day, fires anytime within the hour.
 - ⚠️ Frontend reads with the anon key, so the `cars` + `auction_results` tables must stay readable by the Supabase `anon` role or the live site shows no data.
 
