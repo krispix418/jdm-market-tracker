@@ -80,15 +80,15 @@ export async function getMarketData(): Promise<MarketData> {
 
   if (!cars) return { cars: [], seriesByCar: new Map(), latestSaleDate: null };
 
-  // Ascending so each car's series is chronological and the newest row wins for latest/thumbnail.
-  const rows = await fetchAllRows<{ car_id: string; sale_price: number; sale_date: string; thumbnail_url: string | null }>(
+  // Ascending so each car's series is chronological and the newest row wins for latest.
+  const rows = await fetchAllRows<{ car_id: string; sale_price: number; sale_date: string }>(
     "auction_results",
-    "car_id, sale_price, sale_date, thumbnail_url",
+    "car_id, sale_price, sale_date",
     { column: "sale_date", ascending: true }
   );
 
   const seriesByCar = new Map<string, CarSeries>();
-  const metaByCar = new Map<string, { latest: number; thumbnail: string | null }>();
+  const metaByCar = new Map<string, { latest: number }>();
   let latestSaleDate: string | null = null;
 
   for (const r of rows) {
@@ -100,9 +100,8 @@ export async function getMarketData(): Promise<MarketData> {
     series.push({ sale_price: r.sale_price, sale_date: r.sale_date });
 
     // asc order → the last row seen per car is the newest sale.
-    const meta = metaByCar.get(r.car_id) ?? { latest: r.sale_price, thumbnail: null };
+    const meta = metaByCar.get(r.car_id) ?? { latest: r.sale_price };
     meta.latest = r.sale_price;
-    if (r.thumbnail_url) meta.thumbnail = r.thumbnail_url;
     metaByCar.set(r.car_id, meta);
 
     if (!latestSaleDate || r.sale_date > latestSaleDate) latestSaleDate = r.sale_date;
@@ -112,7 +111,7 @@ export async function getMarketData(): Promise<MarketData> {
     const series = seriesByCar.get(car.id);
     const meta = metaByCar.get(car.id);
     if (!series || series.length === 0 || !meta) {
-      return { ...car, avg_price: 0, min_price: 0, max_price: 0, total_sold: 0, latest_price: 0, thumbnail_url: null };
+      return { ...car, avg_price: 0, min_price: 0, max_price: 0, total_sold: 0, latest_price: 0 };
     }
     const prices = series.map((s) => s.sale_price);
     return {
@@ -122,7 +121,6 @@ export async function getMarketData(): Promise<MarketData> {
       max_price: Math.max(...prices),
       total_sold: prices.length,
       latest_price: meta.latest,
-      thumbnail_url: meta.thumbnail,
     };
   });
 

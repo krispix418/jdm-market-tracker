@@ -26,7 +26,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geistMono.variable} ${serifDisplay.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <footer className="mt-auto border-t border-card-border/30">
+          <p className="max-w-7xl mx-auto px-6 py-6 text-[11px] uppercase tracking-[0.18em] text-subtle">
+            Compiled by{" "}
+            <a href="https://www.instagram.com/cjhalim/" target="_blank" rel="noopener noreferrer" className="text-muted hover:text-foreground underline-offset-4 hover:underline">
+              @cjhalim
+            </a>
+            {" · "}Auction data courtesy of{" "}
+            <a href="https://bringatrailer.com" target="_blank" rel="noopener noreferrer" className="text-muted hover:text-foreground underline-offset-4 hover:underline">
+              Bring a Trailer
+            </a>
+          </p>
+        </footer>
+      </body>
     </html>
   );
 }

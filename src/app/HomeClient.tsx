@@ -24,18 +24,14 @@ function CarCard({ car }: { car: CarWithStats }) {
   return (
     <Link href={`/car/${car.id}`}>
       <div className="group cursor-pointer">
-        <div className="aspect-[16/10] overflow-hidden bg-subtle mb-3">
-          {car.thumbnail_url ? (
-            <img
-              src={car.thumbnail_url}
-              alt={`${car.make} ${car.model} ${car.generation}`}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <span className="text-muted text-sm">No image</span>
-            </div>
-          )}
+        {/* Typographic plate — no third-party photos (BaT images aren't ours to reuse). */}
+        <div className="aspect-[16/10] mb-3 border border-card-border/30 bg-card-bg flex flex-col items-center justify-center group-hover:border-card-border transition-colors">
+          <span className="font-serif font-black text-5xl tracking-tight text-foreground">
+            {car.generation}
+          </span>
+          <span className="mt-2 text-[10px] uppercase tracking-[0.3em] text-subtle">
+            {car.make} {car.model}
+          </span>
         </div>
 
         <div className="flex justify-between items-baseline">

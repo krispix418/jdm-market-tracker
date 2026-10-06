@@ -47,5 +47,4 @@ export interface CarWithStats extends Car {
   max_price: number;
   total_sold: number;
   latest_price: number;
-  thumbnail_url: string | null;
 }
