@@ -1,21 +1,22 @@
 @import "tailwindcss";
 
-/* "The JDM Ledger" — Broadsheet palette: ink on warm paper, single oxblood
-   accent. Chart colors are mirrored in src/lib/theme.ts — keep the two in
+/* "The JDM Ledger" — Night broadsheet palette: paper-white ink on warm
+   charcoal, single rust/oxblood accent (brightened for dark-bg contrast). Chart colors are mirrored in src/lib/theme.ts — keep the two in
    sync. Editorial single-accent: oxblood = appreciating/premium/emphasis,
    neutral grey = depreciating. */
 :root {
-  --background: #f5f1e8;
-  --foreground: #1a1712;
-  --muted: #6f685b;
-  --subtle: #9a917f;
-  --card-bg: #fffdf7;
-  --card-border: #211d16;
-  --accent: #1a1712;
-  --trend-up: #8a3324;
-  --trend-down: #6f685b;
-  --data-primary: #1a1712;
-  --data-secondary: #8c8472;
+  color-scheme: dark;
+  --background: #15130f;
+  --foreground: #ece5d6;
+  --muted: #a39a88;
+  --subtle: #857d6c;
+  --card-bg: #1d1a15;
+  --card-border: #cfc6b4;
+  --accent: #ece5d6;
+  --trend-up: #d0674f;
+  --trend-down: #a39a88;
+  --data-primary: #ece5d6;
+  --data-secondary: #8f8775;
 }
 
 @theme inline {
@@ -46,10 +47,10 @@ body {
 }
 
 .card-hover:hover {
-  background: #efe9db;
+  background: #25211b;
 }
 
 ::selection {
-  background: #8a3324;
-  color: #f5f1e8;
+  background: #d0674f;
+  color: #15130f;
 }

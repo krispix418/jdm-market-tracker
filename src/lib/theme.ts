@@ -6,25 +6,25 @@
  * rather than CSS variables. Keep these in sync with the matching custom
  * properties in `src/app/globals.css` (the DOM/Tailwind side of the palette).
  *
- * Semantic model — Broadsheet single-accent (oxblood on paper):
+ * Semantic model — Night broadsheet single-accent (rust on charcoal):
  *   oxblood    = up / premium / over-fair / emphasis
  *   warm grey  = down / under-fair (no second color — restraint is the point)
  */
 export const chartColors = {
   /** appreciating · premium · over-fair · the one accent */
-  up: "#8a3324",
+  up: "#d0674f",
   /** depreciating · under-fair (neutral grey, not a second hue) */
-  down: "#6f685b",
+  down: "#a39a88",
   /** no clear trend / flat */
-  flat: "#b3aa97",
+  flat: "#6b6455",
   /** ink data — scatter dots, individual-sales dots, the fair-price line */
-  dataPrimary: "#2a261d",
+  dataPrimary: "#e3dccd",
   /** axis ticks & secondary labels */
-  axis: "#8c8472",
+  axis: "#8f8775",
   /** emphasized axis labels (e.g. category names) */
-  axisStrong: "#4a4439",
-  /** faint cartesian grid lines on paper */
-  grid: "#e2dac9",
-  /** bold black baseline rules / reference lines / hover cursors */
-  gridStrong: "#1a1712",
+  axisStrong: "#c2b9a6",
+  /** faint cartesian grid lines on charcoal */
+  grid: "#2c2821",
+  /** bold light baseline rules / reference lines / hover cursors */
+  gridStrong: "#cfc6b4",
 } as const;
