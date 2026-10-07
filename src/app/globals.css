@@ -50,6 +50,12 @@ body {
   background: #25211b;
 }
 
+/* Unifies mismatched Commons photos into one ink-on-charcoal set. Any photo
+   shown with this filter is credited as "(edited)". */
+.duotone {
+  filter: grayscale(1) sepia(0.35) contrast(1.05) brightness(0.9);
+}
+
 ::selection {
   background: #d0674f;
   color: #15130f;

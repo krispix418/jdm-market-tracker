@@ -5,6 +5,12 @@ export interface Car {
   generation: string;
   year_start: number | null;
   year_end: number | null;
+  // Wikimedia Commons hero photo + attribution (migration 005).
+  image_url: string | null;
+  image_author: string | null;
+  image_license: string | null;
+  image_license_url: string | null;
+  image_source_url: string | null;
 }
 
 export interface AuctionResult {

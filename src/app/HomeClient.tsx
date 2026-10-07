@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import type { CarWithStats } from "@/lib/types";
 import type { TopMover } from "./page";
+import { commonsThumb } from "@/lib/photos";
 
 type SortOption = "name" | "price-high" | "price-low" | "most-sold";
 
@@ -24,15 +25,27 @@ function CarCard({ car }: { car: CarWithStats }) {
   return (
     <Link href={`/car/${car.id}`}>
       <div className="group cursor-pointer">
-        {/* Typographic plate — no third-party photos (BaT images aren't ours to reuse). */}
-        <div className="aspect-[16/10] mb-3 border border-card-border/30 bg-card-bg flex flex-col items-center justify-center group-hover:border-card-border transition-colors">
-          <span className="font-serif font-black text-5xl tracking-tight text-foreground">
-            {car.generation}
-          </span>
-          <span className="mt-2 text-[10px] uppercase tracking-[0.3em] text-subtle">
-            {car.make} {car.model}
-          </span>
-        </div>
+        {/* Commons photo (credited on the car page + /credits); typographic plate
+            when none is picked. BaT images aren't ours to reuse. */}
+        {car.image_url ? (
+          <div className="aspect-[16/10] mb-3 overflow-hidden bg-card-bg">
+            <img
+              src={commonsThumb(car.image_url, 500)}
+              alt={`${car.make} ${car.model} ${car.generation}`}
+              loading="lazy"
+              className="duotone w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+          </div>
+        ) : (
+          <div className="aspect-[16/10] mb-3 border border-card-border/30 bg-card-bg flex flex-col items-center justify-center group-hover:border-card-border transition-colors">
+            <span className="font-serif font-black text-5xl tracking-tight text-foreground">
+              {car.generation}
+            </span>
+            <span className="mt-2 text-[10px] uppercase tracking-[0.3em] text-subtle">
+              {car.make} {car.model}
+            </span>
+          </div>
+        )}
 
         <div className="flex justify-between items-baseline">
           <div>

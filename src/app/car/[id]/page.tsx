@@ -9,6 +9,8 @@ import ConditionBreakdown from "./ConditionBreakdown";
 import TrendToggle from "./TrendToggle";
 import HedonicBreakdown from "./HedonicBreakdown";
 import { percentile, segmentLabel, hedonicModel } from "@/lib/valuation";
+import { commonsThumb } from "@/lib/photos";
+import PhotoCredit from "../../PhotoCredit";
 
 function formatPrice(price: number): string {
   return `$${price.toLocaleString()}`;
@@ -92,6 +94,19 @@ export default async function CarDetail({
       </header>
 
       <main className="max-w-5xl mx-auto px-6 py-10 space-y-14">
+        {car.image_url && (
+          <figure>
+            <img
+              src={commonsThumb(car.image_url, 960)}
+              alt={`${car.make} ${car.model} ${car.generation}`}
+              className="duotone w-full aspect-[21/9] object-cover"
+            />
+            <figcaption>
+              <PhotoCredit car={car} className="mt-2" />
+            </figcaption>
+          </figure>
+        )}
+
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-px bg-card-border">
           {[

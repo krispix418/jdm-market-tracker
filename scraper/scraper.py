@@ -204,7 +204,9 @@ def items_to_results(items: list[dict]) -> list[dict]:
             "mileage": parse_mileage_from_title(title),
             "trim": parse_trim_from_title(title),
             "url": url,
-            "thumbnail_url": item.get("thumbnail_url", ""),
+            # BaT photos aren't ours to reuse — don't store their image URLs.
+            # Empty string (not omitted) in case the column is NOT NULL.
+            "thumbnail_url": "",
             "source": "bringatrailer",
             # WS1 enrichment
             "excerpt": excerpt[:2000],

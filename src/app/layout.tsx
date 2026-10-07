@@ -38,6 +38,10 @@ export default function RootLayout({
             <a href="https://bringatrailer.com" target="_blank" rel="noopener noreferrer" className="text-muted hover:text-foreground underline-offset-4 hover:underline">
               Bring a Trailer
             </a>
+            {" · "}
+            <a href="/credits" className="text-muted hover:text-foreground underline-offset-4 hover:underline">
+              Photo credits
+            </a>
           </p>
         </footer>
       </body>
