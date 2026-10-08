@@ -111,6 +111,8 @@ insights) and the Claude API cost/billing notes.
 - [x] Connect Vercel ↔ GitHub for push-to-deploy (2026-10-06) — pushes to `main` auto-deploy to production
 - [x] Dark-only "night broadsheet" theme (2026-10-06) — warm charcoal `#15130f`, off-white ink, rust accent `#d0674f`. Palette lives in `globals.css` + `src/lib/theme.ts` (keep in sync).
 - [x] Dedupe fix (2026-10-06) — see "Duplicate Auctions Incident".
+- [x] Car photos (2026-10-07/08) — BaT thumbnails removed; Wikimedia Commons photos with attribution + `/credits`. See "Photos & Data Sourcing".
+- [x] Byline footer: "Compiled by @cjhalim (IG) · Auction data courtesy of Bring a Trailer · Photo credits".
 - [ ] ~~Add Cars & Bids as second source~~ — **ruled out**: C&B Terms of Use ban scraping/automated extraction for any unauthorized purpose, and the site 403s plain scripts. Alternatives shortlisted (unverified): eBay API (sold data is restricted access), Hagerty Marketplace, Collecting Cars, Classic.com (partnership only), Japan auction data (paid).
 
 ### Phase 2 (see PHASE2_PLAN.md for detail)
@@ -165,6 +167,13 @@ insights) and the Claude API cost/billing notes.
 - **Lesson:** any Supabase read that can exceed 1000 rows must paginate (`fetchAllRows` in `src/lib/data.ts`, `_fetch_all` in `insights.py`).
 - **TODO:** drop the backup table a few weeks after 2026-10-06 once numbers look right (command at bottom of 004).
 - Now that `url` is unique, a duplicate insert will error and fail the scrape (which opens a `scrape-failure` issue), so a regression can't silently happen again.
+
+## Photos & Data Sourcing
+- **Terms checked (2026-10-06):** Cars & Bids, Hagerty, Craigslist (liquidated damages!), and Carvana all ban scraping. eBay's sold-data API (Marketplace Insights) is limited-release/business-approval only. **BaT's own ToS also bans scraping** — decided to keep the polite weekly scrape anyway and reduce footprint (no BaT images, credit + link BaT in the footer). No permission email sent. Licensed data (Classic.com / Hagerty) is the only fully clean path for a second source.
+- **Photos:** one Wikimedia Commons photo per car, stored on `cars` (`image_url/author/license/license_url/source_url`, migration 005). Allowed licenses: CC0, PD, CC BY, CC BY-SA. Shown with a CSS `.duotone` filter (globals.css), so every credit says "(edited)". Credits: car-page caption (`src/app/PhotoCredit.tsx`) + `/credits` page.
+- Images hotlink Commons thumbnails via `commonsThumb()` (`src/lib/photos.ts`) — 500px cards, 960px hero. Commons API URLs carry `utm_*` params; strip them (the helper does).
+- **Picking/QA tools** live in the private registry: `~/Desktop/project_artifacts/jdm-market-tracker/commons/` (`build_contact_sheet.py` → `contact_sheet.html` picker → SQL). Watch for wrong generations (Evo VIII got an IX photo; new Z got a 1970 S30) and race/drift liveries.
+- The scraper writes `thumbnail_url = ""` (column may be NOT NULL); old BaT URLs remain in existing rows but nothing reads them.
 
 ## Decisions Made
 - **Design = editorial "broadsheet"** (light paper/ink, single oxblood accent, Fraunces serif headlines + Helvetica labels). Oxblood is a **neutral price-level cue** — "higher / pricier / hotter" (appreciating, premium, over-fair) — *not* a good/bad signal; depreciating/under-fair is neutral grey. Framing is a **market almanac** (serves both investors and buyers) rather than a deal-finder. Swapping the headline font is a one-line change in `layout.tsx` (CSS var `--font-serif-display` is stable).
